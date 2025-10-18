@@ -92,9 +92,14 @@ public class CustomerAuthService {
         customerRepository.save(user);
 
         String url = "http://localhost:8080/api/auth/customer/reset-password?token=" + token;
-        emailService.sendPasswordResetLink(user.getEmail(), url);
+        // Here send email to reset password
     }
 
+    /**
+     * This method reset the password of a customer using a valid reset token.
+     *
+     * @param req the reset password request
+     */
     public void resetPassword(ResetPasswordRequest req) {
         var user = customerRepository.findAll().stream()
                 .filter(u -> req.getToken().equals(u.getExpireToken()))
