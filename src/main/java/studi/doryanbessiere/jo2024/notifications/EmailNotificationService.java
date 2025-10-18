@@ -13,7 +13,7 @@ import studi.doryanbessiere.jo2024.rendering.TemplateEngine;
 public class EmailNotificationService implements NotificationService<EmailRequest> {
 
     private final JavaMailSenderImpl mailSender;
-    private final TemplateEngine templateEngine; // Injection du moteur abstrait
+    private final TemplateEngine templateEngine;
 
     @Override
     public void sendNotification(EmailRequest request) {
