@@ -16,8 +16,7 @@ public class WebCorsConfig {
     public CorsConfigurationSource corsConfigurationSource(Environment env) {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Récupère la variable d’environnement CORS_ALLOWED_ORIGIN
-        // Par défaut, on autorise localhost:5173
+        // Récupère la variable d’environnement CORS_ALLOWED_ORIGIN ou utilise une valeur par défaut
         String allowedOrigin = env.getProperty("CORS_ALLOWED_ORIGIN", "http://localhost:5173");
 
         configuration.setAllowedOrigins(List.of(allowedOrigin));

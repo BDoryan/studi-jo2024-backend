@@ -35,9 +35,9 @@ public class CustomerAuthController {
     @Operation(
             summary = "Inscription d’un nouveau client",
             description = """
-            Cette opération permet à un nouvel utilisateur de créer un compte client en fournissant les informations requises telles que le prénom, le nom, l’adresse e-mail et le mot de passe.
-            Une fois inscrit, le client pourra utiliser ses identifiants pour se connecter et accéder aux fonctionnalités réservées aux utilisateurs authentifiés.
-            """
+                    Cette opération permet à un nouvel utilisateur de créer un compte client en fournissant les informations requises telles que le prénom, le nom, l’adresse e-mail et le mot de passe.
+                    Une fois inscrit, le client pourra utiliser ses identifiants pour se connecter et accéder aux fonctionnalités réservées aux utilisateurs authentifiés.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Client enregistré avec succès",
@@ -54,9 +54,9 @@ public class CustomerAuthController {
     @Operation(
             summary = "Connexion d’un client existant",
             description = """
-            Cette opération permet à un client existant de se connecter à son compte en fournissant ses identifiants (adresse e-mail et mot de passe).
-            Si les informations sont correctes, le client recevra un jeton d'authentification (JWT) qui lui permettra d'accéder aux ressources protégées de l'API.
-            """
+                    Cette opération permet à un client existant de se connecter à son compte en fournissant ses identifiants (adresse e-mail et mot de passe).
+                    Si les informations sont correctes, le client recevra un jeton d'authentification (JWT) qui lui permettra d'accéder aux ressources protégées de l'API.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Authentification réussie",
@@ -64,8 +64,32 @@ public class CustomerAuthController {
             @ApiResponse(responseCode = "401", description = "Identifiants invalides", content = @Content),
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur", content = @Content)
     })
+
     @PostMapping(Routes.Auth.Customer.LOGIN)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(new AuthResponse(authService.login(req)));
+    }
+
+    @Operation(
+            summary = "Récupération des informations du client authentifié",
+            description = """
+                    Cette opération permet de récupérer les informations du client actuellement authentifié en utilisant le jeton d'authentification (JWT) fourni dans l'en-tête de la requête.
+                    Le client recevra ses détails personnels, tels que le prénom, le nom et l'adresse e-mail.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Informations du client récupérées avec succès",
+                    content = @Content(schema = @Schema(implementation = Customer.class))),
+            @ApiResponse(responseCode = "401", description = "Jeton d'authentification invalide ou manquant", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur", content = @Content)
+    })
+    @GetMapping(Routes.Auth.Customer.ME)
+    public ResponseEntity<Customer> me(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader;
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring("Bearer ".length());
+        }
+        Customer customer = authService.getAuthenticatedCustomer(token);
+        return ResponseEntity.ok(customer);
     }
 }

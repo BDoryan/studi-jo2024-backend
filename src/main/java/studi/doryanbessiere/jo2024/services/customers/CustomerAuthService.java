@@ -1,6 +1,7 @@
 package studi.doryanbessiere.jo2024.services.customers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,14 +22,12 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
- * This class handle the authentication logic for customers
- * - Registration
- * - Login
- * - Forgot Password
- * - Reset Password
+ * Cette classe gère l'authentification des clients, y compris l'inscription,
+ * la connexion, la réinitialisation du mot de passe, etc.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomerAuthService {
 
     private final CustomerRepository customerRepository;
@@ -39,21 +38,21 @@ public class CustomerAuthService {
     private final Environment env;
 
     /**
-     * Password policy : at least 8 characters, one uppercase, one lowercase, one digit
+     * Politique de mot de passe :
+     * - Au moins 8 caractères
+     * - Au moins une lettre majuscule
+     * - Au moins une lettre minuscule
+     * - Au moins un chiffre
      */
     private static final Pattern PASSWORD_POLICY =
             Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$");
 
     /**
-     * This method register a new customer
+     * Cette méthode enregistre un nouveau client dans le système.
      *
-     * @param req the registration request
+     * @param req la requête d'inscription contenant les informations du client
      */
     public void register(RegisterRequest req) {
-        if (!PASSWORD_POLICY.matcher(req.getPassword()).matches()) {
-            throw new BadRequestException("weak_password");
-        }
-
         Customer user = Customer.builder()
                 .firstName(req.getFirstname())
                 .lastName(req.getLastname())
@@ -63,42 +62,50 @@ public class CustomerAuthService {
                 .build();
 
         customerRepository.save(user);
+        log.info("Customer registered with email={}", user.getEmail());
     }
 
     /**
-     * This method authenticate a customer and return a JWT token if successful
-     * or throw UnauthorizedException if the credentials are invalid
+     * Cette méthode authentifie un client et génère un token JWT.
      *
-     * @param req the login request
-     *
-     * @return the JWT token
+     * @param req la requête de connexion contenant les identifiants du client
+     * @return le token JWT généré
      */
     public String login(LoginRequest req) {
-        var user = customerRepository.findByEmail(req.getEmail())
-                .orElseThrow(InvalidCredentialsException::new);
-
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword()))
+        var userOpt = customerRepository.findByEmail(req.getEmail());
+        if (userOpt.isEmpty()) {
+            log.warn("Login attempt with unknown email={}", req.getEmail());
             throw new InvalidCredentialsException();
+        }
 
+        var user = userOpt.get();
+
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+            log.warn("Invalid password provided for email={}", req.getEmail());
+            throw new InvalidCredentialsException();
+        }
+
+        log.info("Customer authenticated email={}", user.getEmail());
         return jwtService.generateToken(user.getEmail(), Map.of("role", "CUSTOMER", "uid", user.getId()));
     }
 
     /**
-     * [DISABLED : MVP2]
-     * This method handle forgot password requests by generating a reset token
-     * and sending a reset link to the user's email.
+     * Cette méthode gère la demande de réinitialisation de mot de passe.
      *
-     * @param req the forgot password request
+     * @param req la requête de mot de passe oublié contenant l'email du client
      */
-
     public void forgotPassword(ForgotPasswordRequest req) {
         var user = customerRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new BadRequestException("user_not_found"));
+                .orElseThrow(() -> {
+                    log.warn("Password reset requested for unknown email={}", req.getEmail());
+                    return new BadRequestException("user_not_found");
+                });
 
+        // TODO: Generate JWT token instead of UUID
         String token = UUID.randomUUID().toString();
         user.setExpireToken(token);
-        user.setExpireTokenAt(LocalDateTime.now().plusMinutes(15));
         customerRepository.save(user);
+        log.info("Password reset token generated for email={}", user.getEmail());
 
         String frontendUrl = env.getProperty("APP_FRONTEND_URL", "http://localhost:5173");
         String appName = env.getProperty("APP_NAME", "Billetterie JO 2024");
@@ -112,8 +119,8 @@ public class CustomerAuthService {
                 "name", user.getFirstName(),
                 "resetUrl", resetUrl,
                 "expirationMinutes", 15,
-                "supportEmail",  supportEmail,
-                "appName",  appName
+                "supportEmail", supportEmail,
+                "appName", appName
         );
 
         // Send the email using the EmailNotificationService
@@ -125,27 +132,57 @@ public class CustomerAuthService {
                         .variables(vars)
                         .build()
         );
+        log.info("Password reset email enqueued for email={}", user.getEmail());
     }
 
-
     /**
-     * [DISABLED : MVP2]
-     * This method reset the password of a customer using a valid reset token.
+     * Cette méthode réinitialise le mot de passe d'un client.
      *
-     * @param req the reset password request
+     * @param req la requête de réinitialisation de mot de passe contenant le token et le nouveau mot de passe
      */
     public void resetPassword(ResetPasswordRequest req) {
         var user = customerRepository.findAll().stream()
                 .filter(u -> req.getToken().equals(u.getExpireToken()))
                 .findFirst()
-                .orElseThrow(() -> new BadRequestException("Invalid token"));
+                .orElseThrow(() -> {
+                    log.warn("Password reset attempted with invalid token");
+                    return new BadRequestException("Invalid token");
+                });
 
-        if (user.getExpireTokenAt().isBefore(LocalDateTime.now()))
-            throw new BadRequestException("Token expired");
+        // Here: check the jwt token expiration if using JWT
 
         user.setPassword(passwordEncoder.encode(req.getNewPassword()));
         user.setExpireToken(null);
-        user.setExpireTokenAt(null);
         customerRepository.save(user);
+        log.info("Password successfully reset for email={}", user.getEmail());
+    }
+
+    /**
+     * Cette méthode récupère le client authentifié à partir du token JWT.
+     *
+     * @param token le token JWT
+     * @return le client authentifié
+     */
+    public Customer getAuthenticatedCustomer(String token) {
+        if (!jwtService.isValid(token)) {
+            log.warn("Invalid JWT provided during customer lookup");
+            throw new UnauthorizedException();
+        }
+
+        String email = jwtService.extractSubject(token);
+        return customerRepository.findByEmail(email)
+                .map(customer -> {
+                    log.debug("Authenticated customer retrieved email={}", email);
+                    return Customer.builder()
+                            .id(customer.getId())
+                            .firstName(customer.getFirstName())
+                            .lastName(customer.getLastName())
+                            .email(customer.getEmail())
+                            .build();
+                })
+                .orElseThrow(() -> {
+                    log.warn("Authenticated customer not found for email={}", email);
+                    return new UnauthorizedException();
+                });
     }
 }

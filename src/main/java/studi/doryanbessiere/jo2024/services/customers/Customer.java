@@ -26,9 +26,6 @@ public class Customer {
     @Column(name = "secret_key", unique = true, nullable = false)
     private String secretKey;
 
-    @Column(name = "expire_token")
+    @Column(name = "reset_expire_token")
     private String expireToken;
-
-    @Column(name = "expire_token_at")
-    private LocalDateTime expireTokenAt;
 }
