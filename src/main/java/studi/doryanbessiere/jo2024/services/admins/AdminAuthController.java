@@ -84,7 +84,7 @@ public class AdminAuthController {
                                             value = """
                                                     {
                                                       "status": "error",
-                                                      "code": "INVALID_CREDENTIALS",
+                                                      "code": "invalid_credentials",
                                                       "message": "Adresse e-mail ou mot de passe incorrect"
                                                     }
                                                     """
