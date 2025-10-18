@@ -15,7 +15,7 @@ public class TextTemplateEngine implements TemplateEngine {
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{(.*?)\\}\\}");
 
     @Override
-    public String render(String templateName, Map<String, String> variables) {
+    public String render(String templateName, Map<String, Object> variables) {
         try {
             String content = loadTemplate(templateName);
 
@@ -24,7 +24,7 @@ public class TextTemplateEngine implements TemplateEngine {
 
             while (matcher.find()) {
                 String key = matcher.group(1).trim();
-                String replacement = variables.getOrDefault(key, "");
+                String replacement = variables.getOrDefault(key, "").toString();
                 matcher.appendReplacement(buffer, Matcher.quoteReplacement(replacement));
             }
             matcher.appendTail(buffer);
