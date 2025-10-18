@@ -1,18 +1,17 @@
 package studi.doryanbessiere.jo2024.services.admins.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
-/**
- * Données d'entrée nécessaires à la connexion d'un administrateur.
- */
-@Schema(description = "Requête de connexion administrateur")
-public record AdminLoginRequest(
+@Data
+public class AdminLoginRequest {
 
-        @Schema(description = "Adresse e-mail de l’administrateur", example = "admin@jo2024.fr")
-        @Email @NotBlank String email,
+    @Email(message = "email_invalid")
+    @NotBlank(message = "is_required")
+    private String email;
 
-        @Schema(description = "Mot de passe de l’administrateur", example = "MotDePasseSecurise123!")
-        @NotBlank String password
-) {}
+    @NotBlank(message = "is_required")
+    private String password;
+
+}
