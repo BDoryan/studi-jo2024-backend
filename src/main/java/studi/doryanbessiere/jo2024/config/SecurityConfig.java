@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 import studi.doryanbessiere.jo2024.common.Routes;
 
 /**
@@ -21,30 +22,35 @@ import studi.doryanbessiere.jo2024.common.Routes;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final CorsConfigurationSource corsConfigurationSource; // ✅ Injection du bean CORS
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-        // Remove CSRF for JWT usage
-        .csrf(csrf -> csrf.disable())
-
-        // No session will be created or used by Spring Security
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-        // Authorize requests
-        .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                        Routes.Auth.Customer.BASE+"/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "/v3/api-docs.yaml"
-                ).permitAll()
-                .anyRequest().authenticated()
-        );
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                Routes.Auth.Customer.BASE + "/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                );
 
         return http.build();
     }
 
-    @Bean public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception { return cfg.getAuthenticationManager(); }
-    @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+        return cfg.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
