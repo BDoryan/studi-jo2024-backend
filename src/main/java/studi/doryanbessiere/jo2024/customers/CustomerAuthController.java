@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -38,12 +37,7 @@ public class CustomerAuthController {
             description = """
             Cette opération permet à un nouvel utilisateur de créer un compte client en fournissant les informations requises telles que le prénom, le nom, l’adresse e-mail et le mot de passe.
             Une fois inscrit, le client pourra utiliser ses identifiants pour se connecter et accéder aux fonctionnalités réservées aux utilisateurs authentifiés.
-            """,
-            requestBody = @RequestBody(
-                    description = "Informations nécessaires à l’inscription du client",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = RegisterRequest.class))
-            )
+            """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Client enregistré avec succès",
@@ -62,12 +56,7 @@ public class CustomerAuthController {
             description = """
             Cette opération permet à un client existant de se connecter à son compte en fournissant ses identifiants (adresse e-mail et mot de passe).
             Si les informations sont correctes, le client recevra un jeton d'authentification (JWT) qui lui permettra d'accéder aux ressources protégées de l'API.
-            """,
-            requestBody = @RequestBody(
-                    description = "Identifiants de connexion du client",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = LoginRequest.class))
-            )
+            """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Authentification réussie",
