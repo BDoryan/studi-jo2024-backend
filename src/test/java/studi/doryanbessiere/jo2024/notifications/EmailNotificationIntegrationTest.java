@@ -1,4 +1,4 @@
-package studi.doryanbessiere.jo2024;
+package studi.doryanbessiere.jo2024.notifications;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -6,16 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.test.context.ActiveProfiles;
-import studi.doryanbessiere.jo2024.notifications.EmailNotificationService;
 import studi.doryanbessiere.jo2024.notifications.dto.EmailRequest;
 
-@SpringBootTest(properties = {
-        "spring.autoconfigure.exclude=" +
-                "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration," +
-                "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration," +
-                "org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration," +
-                "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration"
-})
+@SpringBootTest
 @ActiveProfiles("test")
 class EmailNotificationIntegrationTest {
 

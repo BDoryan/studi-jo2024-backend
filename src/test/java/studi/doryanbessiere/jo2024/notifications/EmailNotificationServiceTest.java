@@ -1,12 +1,10 @@
-package studi.doryanbessiere.jo2024;
+package studi.doryanbessiere.jo2024.notifications;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-import studi.doryanbessiere.jo2024.notifications.EmailNotificationService;
 import studi.doryanbessiere.jo2024.notifications.dto.EmailRequest;
 import studi.doryanbessiere.jo2024.rendering.TextTemplateEngine;
 

@@ -5,6 +5,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import studi.doryanbessiere.jo2024.common.exceptions.BadRequestException;
+import studi.doryanbessiere.jo2024.common.exceptions.InvalidCredentialsException;
 import studi.doryanbessiere.jo2024.common.exceptions.UnauthorizedException;
 import studi.doryanbessiere.jo2024.notifications.EmailNotificationService;
 import studi.doryanbessiere.jo2024.notifications.dto.EmailRequest;
@@ -74,10 +75,10 @@ public class CustomerAuthService {
      */
     public String login(LoginRequest req) {
         var user = customerRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("user_not_found"));
+                .orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword()))
-            throw new UnauthorizedException("Invalid credentials");
+            throw new InvalidCredentialsException();
 
         return jwtService.generateToken(user.getEmail(), Map.of("role", "CUSTOMER", "uid", user.getId()));
     }

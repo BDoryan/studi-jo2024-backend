@@ -7,6 +7,9 @@ import java.util.regex.Pattern;
 
 public class PasswordConstraintValidator implements ConstraintValidator<ValidPassword, String> {
 
+    /**
+     * Au moins 8 caractères, une majuscule, une minuscule, un chiffre
+     */
     private static final Pattern PASSWORD_POLICY =
             Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$");
 
