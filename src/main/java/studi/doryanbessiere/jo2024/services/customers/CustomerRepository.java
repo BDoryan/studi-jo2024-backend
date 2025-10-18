@@ -1,4 +1,4 @@
-package studi.doryanbessiere.jo2024.customers;
+package studi.doryanbessiere.jo2024.services.customers;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;

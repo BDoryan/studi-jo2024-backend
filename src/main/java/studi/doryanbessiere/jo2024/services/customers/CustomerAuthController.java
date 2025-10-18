@@ -1,4 +1,4 @@
-package studi.doryanbessiere.jo2024.customers;
+package studi.doryanbessiere.jo2024.services.customers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,9 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import studi.doryanbessiere.jo2024.common.Routes;
 import studi.doryanbessiere.jo2024.common.dto.ApiMessageResponse;
-import studi.doryanbessiere.jo2024.customers.dto.AuthResponse;
-import studi.doryanbessiere.jo2024.customers.dto.LoginRequest;
-import studi.doryanbessiere.jo2024.customers.dto.RegisterRequest;
+import studi.doryanbessiere.jo2024.services.customers.dto.AuthResponse;
+import studi.doryanbessiere.jo2024.services.customers.dto.LoginRequest;
+import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
 
 @RestController
 @RequestMapping(Routes.Auth.Customer.BASE)

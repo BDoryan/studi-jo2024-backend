@@ -1,4 +1,4 @@
-package studi.doryanbessiere.jo2024.customers.dto;
+package studi.doryanbessiere.jo2024.services.customers.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

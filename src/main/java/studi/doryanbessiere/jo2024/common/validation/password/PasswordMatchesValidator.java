@@ -2,7 +2,7 @@ package studi.doryanbessiere.jo2024.common.validation.password;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import studi.doryanbessiere.jo2024.customers.dto.RegisterRequest;
+import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
 
 public class PasswordMatchesValidator implements ConstraintValidator<PasswordMatches, RegisterRequest> {
 

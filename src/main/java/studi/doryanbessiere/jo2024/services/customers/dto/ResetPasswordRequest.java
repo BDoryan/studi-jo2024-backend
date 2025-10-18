@@ -1,4 +1,4 @@
-package studi.doryanbessiere.jo2024.customers.dto;
+package studi.doryanbessiere.jo2024.services.customers.dto;
 
 import lombok.Data;
 

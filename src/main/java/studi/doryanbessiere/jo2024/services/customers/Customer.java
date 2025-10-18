@@ -1,4 +1,4 @@
-package studi.doryanbessiere.jo2024.customers;
+package studi.doryanbessiere.jo2024.services.customers;
 
 import jakarta.persistence.*;
 import lombok.*;

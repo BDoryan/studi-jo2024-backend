@@ -12,10 +12,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import studi.doryanbessiere.jo2024.common.Routes;
 import studi.doryanbessiere.jo2024.common.validation.password.PasswordMatches;
 import studi.doryanbessiere.jo2024.common.validation.password.ValidPassword;
-import studi.doryanbessiere.jo2024.customers.CustomerAuthController;
-import studi.doryanbessiere.jo2024.customers.CustomerAuthService;
-import studi.doryanbessiere.jo2024.customers.CustomerRepository;
-import studi.doryanbessiere.jo2024.customers.dto.RegisterRequest;
+import studi.doryanbessiere.jo2024.services.customers.CustomerAuthController;
+import studi.doryanbessiere.jo2024.services.customers.CustomerAuthService;
+import studi.doryanbessiere.jo2024.services.customers.CustomerRepository;
+import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import studi.doryanbessiere.jo2024.customers.CustomerRepository;
+import studi.doryanbessiere.jo2024.services.customers.CustomerRepository;
 
 @Component
 @RequiredArgsConstructor

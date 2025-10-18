@@ -16,5 +16,5 @@ public class EmailRequest {
     private String subject;
     private String message; // The rendered message content
     private String templateName; // Define the template name to be used
-    private Map<String, String> variables; // Parse the variables for template rendering
+    private Map<String, Object> variables; // Parse the variables for template rendering
 }
