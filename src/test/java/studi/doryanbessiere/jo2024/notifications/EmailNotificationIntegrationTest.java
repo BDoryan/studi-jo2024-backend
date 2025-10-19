@@ -8,8 +8,8 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.test.context.ActiveProfiles;
 import studi.doryanbessiere.jo2024.notifications.dto.EmailRequest;
 
-@SpringBootTest
 @ActiveProfiles("test")
+@SpringBootTest(properties = "spring.profiles.active=test")
 class EmailNotificationIntegrationTest {
 
     @Autowired

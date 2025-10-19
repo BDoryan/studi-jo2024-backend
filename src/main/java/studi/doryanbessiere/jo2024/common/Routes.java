@@ -26,6 +26,18 @@ public final class Routes {
         }
     }
 
+    public static final class Payment {
+
+        public static final String BASE = "/payments";
+        public static final String CHECKOUT = "/checkout";
+
+    }
+
+    public static final class Stripe {
+        public static final String BASE = "/stripe";
+        public static final String WEBHOOK = "/webhook";
+    }
+
     public static final class Offer {
         public static final String BASE = "/offers";
     }

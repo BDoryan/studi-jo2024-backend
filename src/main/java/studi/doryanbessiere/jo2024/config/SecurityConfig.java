@@ -31,6 +31,8 @@ public class SecurityConfig {
                                 Routes.Auth.Customer.BASE + "/**",
                                 Routes.Auth.Admin.BASE + "/**",
                                 Routes.Offer.BASE + "/**",
+                                Routes.Payment.BASE + "/**",
+                                Routes.Stripe.BASE + "/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",

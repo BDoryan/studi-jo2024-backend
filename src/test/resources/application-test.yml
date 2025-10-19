@@ -17,3 +17,10 @@ spring:
     allow-bean-definition-overriding: true
   jackson:
     property-naming-strategy: SNAKE_CASE
+stripe:
+  secret:
+    key: dummy_secret
+  public:
+    key: dummy_public
+  webhook:
+    secret: dummy_webhook
