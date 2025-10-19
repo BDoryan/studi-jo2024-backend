@@ -31,4 +31,8 @@ public class Offer {
 
     @Column(nullable = false)
     private int quantity;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean active;
+
 }

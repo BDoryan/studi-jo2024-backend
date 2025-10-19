@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
-import studi.doryanbessiere.jo2024.common.Routes;
 
 @Configuration
 @EnableMethodSecurity
@@ -23,20 +22,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // Autoriser CORS et désactiver CSRF
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
+
+                // Pas de session (JWT stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Gestion des accès
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                Routes.Auth.Customer.BASE + "/**",
-                                Routes.Auth.Admin.BASE + "/**",
-                                Routes.Offer.BASE + "/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 );
 
         return http.build();

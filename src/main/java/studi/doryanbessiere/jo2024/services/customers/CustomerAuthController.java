@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,11 @@ import studi.doryanbessiere.jo2024.common.dto.ApiMessageResponse;
 import studi.doryanbessiere.jo2024.services.customers.dto.AuthResponse;
 import studi.doryanbessiere.jo2024.services.customers.dto.LoginRequest;
 import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
+import studi.doryanbessiere.jo2024.services.tickets.TicketService;
+import studi.doryanbessiere.jo2024.services.tickets.dto.TicketResponse;
+import studi.doryanbessiere.jo2024.shared.security.CustomerOnly;
+
+import java.util.List;
 
 @RestController
 @RequestMapping(Routes.Auth.Customer.BASE)
@@ -90,6 +96,36 @@ public class CustomerAuthController {
             token = token.substring("Bearer ".length());
         }
         Customer customer = authService.getAuthenticatedCustomer(token);
-        return ResponseEntity.ok(customer);
+        return ResponseEntity.ok(Customer.builder()
+                .id(customer.getId())
+                .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
+                .email(customer.getEmail())
+                .build());
+    }
+
+    private final TicketService ticketService;
+    private final CustomerAuthService customerAuthService;
+
+    @GetMapping(Routes.Auth.Customer.ME_TICKETS)
+    @CustomerOnly
+    @Operation(
+            summary = "Lister les billets d'un client",
+            description = "Renvoie l'ensemble des billets associés au compte connecté.",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Liste des billets",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = TicketResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Utilisateur non authentifié"),
+                    @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
+            }
+    )
+    public ResponseEntity<List<TicketResponse>> meTickets(
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        String token = authorizationHeader.substring(7);
+        Customer customer = customerAuthService.getAuthenticatedCustomer(token);
+        return ResponseEntity.ok(ticketService.getTicketsForCustomer(customer));
     }
 }
