@@ -1,10 +1,13 @@
 package studi.doryanbessiere.jo2024.services.payments;
 
 import com.stripe.model.Event;
-import com.stripe.model.StripeObject;
-import com.stripe.model.checkout.Session;
-import com.stripe.net.ApiResource;
+import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.net.Webhook;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,20 +15,33 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import studi.doryanbessiere.jo2024.common.Routes;
-
-import java.util.Optional;
+import studi.doryanbessiere.jo2024.services.tickets.Ticket;
+import studi.doryanbessiere.jo2024.services.tickets.TicketService;
 
 @Slf4j
 @RestController
 @RequestMapping(Routes.Stripe.BASE)
 @RequiredArgsConstructor
+@Tag(name = "Paiements Stripe", description = "Gestion des notifications automatiques Stripe (webhooks)")
 public class StripeWebhookController {
 
     private final TransactionRepository transactionRepository;
+    private final TicketService ticketService;
 
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
 
+    @Operation(
+            summary = "Réception des événements Stripe (webhook)",
+            description = """
+                Cet endpoint est appelé automatiquement par Stripe lorsqu’un paiement est terminé, échoue ou expire.
+                Il vérifie la signature du message, extrait l'identifiant de la session et met à jour l'état de la transaction.
+                """,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Événement reçu et traité avec succès"),
+                    @ApiResponse(responseCode = "400", description = "Erreur de validation du webhook Stripe", content = @Content)
+            }
+    )
     @PostMapping(Routes.Stripe.WEBHOOK)
     public ResponseEntity<String> handleWebhook(@RequestBody String payload,
                                                 @RequestHeader("Stripe-Signature") String sigHeader) {
@@ -34,103 +50,79 @@ public class StripeWebhookController {
             String type = event.getType();
             log.info("Received Stripe event: {}", type);
 
+            String sessionId = extractSessionIdSafely(event);
+            if (sessionId == null) {
+                log.warn("No session ID found in event payload.");
+                return ResponseEntity.ok("No session id found");
+            }
+
             switch (type) {
-                // Succès de paiement
-                case "checkout.session.completed" -> {
-                    Session session = deserialize(event, Session.class);
-                    if (session == null) break;
-                    onSessionMarked(session, Transaction.TransactionStatus.PAID,
-                            "The transaction {} has been marked as PAID.");
-                }
-
-                // Échec (paiement async échoué)
-                case "checkout.session.async_payment_failed" -> {
-                    Session session = deserialize(event, Session.class);
-                    if (session == null) break;
-                    onSessionMarked(session, Transaction.TransactionStatus.FAILED,
-                            "The transaction {} async payment failed and marked as FAILED.");
-                }
-
-                // Session expirée (pas de paiement)
-                case "checkout.session.expired" -> {
-                    Session session = deserialize(event, Session.class);
-                    if (session == null) break;
-                    onSessionMarked(session, Transaction.TransactionStatus.FAILED,
-                            "The transaction {} has expired and marked as FAILED.");
-                }
-
-                // (Optionnel) D’autres événements → log uniquement
-                case "charge.refunded" -> log.info("Stripe event: charge.refunded (link to a tx if you store charge IDs).");
-                default -> log.warn("Unhandled Stripe event type: {}", type);
+                case "checkout.session.completed" -> handlePaymentSuccess(sessionId);
+                case "checkout.session.async_payment_failed", "payment_intent.payment_failed" -> handlePaymentFailed(sessionId);
+                case "checkout.session.expired" -> handlePaymentExpired(sessionId);
+                case "checkout.session.async_payment_succeeded" -> handleAsyncPaymentSucceeded(sessionId);
+                default -> log.info("Unhandled event type: {}", type);
             }
 
             return ResponseEntity.ok("Received");
         } catch (Exception e) {
             log.error("Stripe webhook error: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Webhook error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Webhook error: " + e.getMessage());
         }
     }
 
-    /**
-     * Désérialise le data.object de l'événement.
-     * - 1) essaie via getObject()
-     * - 2) fallback via JSON brut si absent (versions d'API / SDK)
-     */
-    private <T extends StripeObject> T deserialize(Event event, Class<T> clazz) {
-        var deser = event.getDataObjectDeserializer();
+    private void handlePaymentSuccess(String sessionId) {
+        updateTransactionStatus(sessionId, Transaction.TransactionStatus.PAID,
+                "Payment succeeded for session: {}");
+    }
 
-        Optional<StripeObject> obj = deser.getObject();
-        if (obj.isPresent()) {
-            try {
-                return clazz.cast(obj.get());
-            } catch (ClassCastException e) {
-                log.error("Stripe object type mismatch. Expected {}, got {}",
-                        clazz.getSimpleName(), obj.get().getClass().getSimpleName());
+    private void handlePaymentFailed(String sessionId) {
+        updateTransactionStatus(sessionId, Transaction.TransactionStatus.FAILED,
+                "Payment failed for session: {}");
+    }
+
+    private void handlePaymentExpired(String sessionId) {
+        updateTransactionStatus(sessionId, Transaction.TransactionStatus.FAILED,
+                "Payment expired for session: {}");
+    }
+
+    private void handleAsyncPaymentSucceeded(String sessionId) {
+        updateTransactionStatus(sessionId, Transaction.TransactionStatus.PAID,
+                "Async payment succeeded for session: {}");
+    }
+
+    private void updateTransactionStatus(String sessionId, Transaction.TransactionStatus status, String message) {
+        transactionRepository.findByStripeSessionId(sessionId).ifPresentOrElse(transaction -> {
+            Transaction.TransactionStatus previousStatus = transaction.getStatus();
+            transaction.setStatus(status);
+            transactionRepository.save(transaction);
+            if (status == Transaction.TransactionStatus.PAID && previousStatus != Transaction.TransactionStatus.PAID) {
+                Ticket ticket = ticketService.generateTicketForTransaction(transaction.getId());
+                log.info("Generated ticket {} for transaction {}", ticket.getId(), transaction.getId());
+            }
+            log.info(message, sessionId);
+        }, () -> log.warn("No transaction found for session ID: {}", sessionId));
+    }
+
+    private String extractSessionIdSafely(Event event) {
+        try {
+            EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+            if (deserializer == null || deserializer.getRawJson() == null) {
                 return null;
             }
-        }
+            String json = deserializer.getRawJson();
 
-        // Fallback JSON brut
-        String raw = deser.getRawJson();
-        if (raw == null || raw.isBlank()) {
-            log.warn("Stripe deserialization: raw JSON is empty for event {}", event.getId());
-            return null;
-        }
+            int idx = json.indexOf("\"id\"");
+            if (idx == -1) return null;
+            int start = json.indexOf('"', idx + 5);
+            int end = json.indexOf('"', start + 1);
+            if (start == -1 || end == -1) return null;
 
-        try {
-            return ApiResource.GSON.fromJson(raw, clazz);
+            return json.substring(start + 1, end);
         } catch (Exception e) {
-            log.error("Failed to parse raw JSON to {}: {}", clazz.getSimpleName(), e.getMessage());
+            log.error("Error extracting session id: {}", e.getMessage());
             return null;
-        }
-    }
-
-    private void onSessionMarked(Session session, Transaction.TransactionStatus status, String logMessage) {
-        String transactionId = session.getMetadata() != null ? session.getMetadata().get("transaction_id") : null;
-        if (transactionId == null) {
-            log.warn("No transaction_id in metadata for session {}", session.getId());
-            return;
-        }
-        updateTransactionStatus(transactionId, status, logMessage);
-    }
-
-    private void updateTransactionStatus(String transactionId,
-                                         Transaction.TransactionStatus status,
-                                         String logMessage) {
-        try {
-            Optional<Transaction> txOpt = transactionRepository.findById(Long.parseLong(transactionId));
-            if (txOpt.isEmpty()) {
-                log.warn("Transaction {} not found in database.", transactionId);
-                return;
-            }
-            Transaction tx = txOpt.get();
-            tx.setStatus(status);
-            transactionRepository.save(tx);
-            log.info(logMessage, transactionId);
-        } catch (NumberFormatException e) {
-            log.error("Invalid transaction ID format: {}", transactionId);
-        } catch (Exception e) {
-            log.error("Error updating transaction {}: {}", transactionId, e.getMessage(), e);
         }
     }
 }

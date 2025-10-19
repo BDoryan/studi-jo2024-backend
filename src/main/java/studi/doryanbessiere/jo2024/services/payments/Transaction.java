@@ -2,6 +2,8 @@ package studi.doryanbessiere.jo2024.services.payments;
 
 import jakarta.persistence.*;
 import lombok.*;
+import studi.doryanbessiere.jo2024.services.customers.Customer;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,14 +24,22 @@ public class Transaction {
     @Column(nullable = false)
     private String offerName;
 
+    @Column(nullable = false)
+    private Long offerId;
+
     private double amount;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    @ToString.Exclude
+    private Customer customer;
 
     @Enumerated(EnumType.STRING)
     private TransactionStatus status;
 
     private LocalDateTime createdAt;
 
-    public enum TransactionStatus {
+    public static enum TransactionStatus {
         PENDING,
         PAID,
         FAILED
@@ -37,7 +47,11 @@ public class Transaction {
 
     @PrePersist
     public void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.status = TransactionStatus.PENDING;
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.status == null) {
+            this.status = TransactionStatus.PENDING;
+        }
     }
 }

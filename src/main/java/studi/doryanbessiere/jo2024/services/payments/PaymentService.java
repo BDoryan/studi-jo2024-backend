@@ -28,22 +28,24 @@ public class PaymentService {
             throw new IllegalArgumentException("Offre non trouvée.");
         }
 
+        String token = authorizationHeader.substring(7);
+        Customer customer = customerAuthService.getAuthenticatedCustomer(token);
+
         Offer offer = offerOpt.get();
 
         // Create transaction with PENDING status
         Transaction transaction = transactionRepository.save(
                 Transaction.builder()
                         .offerName(offer.getName())
+                        .offerId(offer.getId())
                         .amount(offer.getPrice())
+                        .customer(customer)
                         .status(Transaction.TransactionStatus.PENDING)
                         .build()
         );
 
         String frontendUrl = env.getProperty("APP_FRONTEND_URL", "http://localhost:5173");
         String host = frontendUrl.endsWith("/") ? frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
-
-        String token = authorizationHeader.substring(7);
-        Customer customer = customerAuthService.getAuthenticatedCustomer(token);
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
