@@ -22,6 +22,11 @@ public final class Routes {
         public static final class Admin {
             public static final String BASE = Auth.BASE + "/admin";
             public static final String LOGIN = "/login";
+            public static final String ME = "/me";
         }
+    }
+
+    public static final class Offer {
+        public static final String BASE = "/offers";
     }
 }

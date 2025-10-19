@@ -30,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 Routes.Auth.Customer.BASE + "/**",
                                 Routes.Auth.Admin.BASE + "/**",
+                                Routes.Offer.BASE + "/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",

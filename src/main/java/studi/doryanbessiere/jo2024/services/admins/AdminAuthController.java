@@ -12,15 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import studi.doryanbessiere.jo2024.common.Routes;
+import studi.doryanbessiere.jo2024.common.exceptions.InvalidCredentialsException;
 import studi.doryanbessiere.jo2024.services.admins.dto.*;
+import studi.doryanbessiere.jo2024.services.customers.Customer;
 
 import java.util.logging.Logger;
 
-/**
- * Contrôleur gérant l'authentification des administrateurs.
- * <p>
- * Permet à un administrateur existant de se connecter à son espace sécurisé.
- */
 @RestController
 @RequestMapping(Routes.Auth.Admin.BASE)
 @RequiredArgsConstructor
@@ -31,15 +28,19 @@ public class AdminAuthController {
 
     private final AdminAuthService service;
 
-    /**
-     * Endpoint de connexion administrateur.
-     *
-     * @param request données d’authentification de l’administrateur (e-mail et mot de passe)
-     * @return un JWT et les informations de l’administrateur connecté
-     */
     @PostMapping(Routes.Auth.Admin.LOGIN)
     public ResponseEntity<AdminAuthResponse> login(@Valid @RequestBody AdminLoginRequest request) {
         log.info("Admin login attempt for email: " + request.getEmail());
         return ResponseEntity.ok(service.login(request));
+    }
+
+    @GetMapping(Routes.Auth.Admin.ME)
+    public ResponseEntity<AdminMeResponse> me(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader;
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring("Bearer ".length());
+        }
+
+        return ResponseEntity.ok(service.getAuthenticatedAdmin(token));
     }
 }

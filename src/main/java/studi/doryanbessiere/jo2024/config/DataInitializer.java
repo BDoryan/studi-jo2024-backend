@@ -18,17 +18,14 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Lecture des variables d’environnement
         String adminEmail = env.getProperty("ADMIN_DEFAULT_EMAIL", "admin@jo2024.fr");
         String adminPassword = env.getProperty("ADMIN_DEFAULT_PASSWORD");
 
-        // Vérifie que le mot de passe est défini
         if (adminPassword == null || adminPassword.isBlank()) {
             System.err.println("Aucun mot de passe défini pour ADMIN_DEFAULT_PASSWORD — administrateur non créé.");
             return;
         }
 
-        // Vérifie si un administrateur existe déjà
         if (!adminRepository.existsByEmail(adminEmail)) {
             Admin admin = Admin.builder()
                     .email(adminEmail)
