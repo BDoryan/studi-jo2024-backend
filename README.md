@@ -23,23 +23,7 @@ Le projet a été réalisé dans le cadre de l’ECF Studi et est composé :
 
 La solution suit une architecture hexagonale légère organisée par domaines métiers.
 
-```
-Clients Web / Admin
-        │
-        ▼
-Reverse Proxy (https://jo2024-api.doryanbessiere.fr)
-        │
-        ▼
-Spring Boot (API REST stateless)
-├─ config/      (configuration applicative, sécurité, CORS, OpenAPI)
-├─ services/    (couches domaine : customers, admins, offers, payments, tickets)
-├─ notifications/ (envoi d’e-mails via SMTP + moteur de templates)
-├─ shared/      (authentification JWT, aspects de sécurité)
-└─ common/      (exceptions, DTO communs, routes, validations)
-        │
-        ├─ Base MySQL (production) / H2 (tests)
-        └─ Stripe API + Serveurs SMTP externes
-```
+https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA
 
 - **Contrôleurs REST** exposent les endpoints publics.
 - **Services métiers** encapsulent la logique (authentification, paiement, génération de billets…).
