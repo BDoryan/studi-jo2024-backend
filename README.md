@@ -1,4 +1,4 @@
-# JO 2024 – Plateforme de billetterie
+# STUDI | JO 2024 – Plateforme de billetterie
 
 > Application Spring Boot permettant la vente, le paiement et la validation des billets des Jeux Olympiques 2024.
 
