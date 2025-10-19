@@ -1,6 +1,5 @@
 package studi.doryanbessiere.jo2024.offers;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -9,26 +8,37 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import studi.doryanbessiere.jo2024.config.SecurityConfig;
+import studi.doryanbessiere.jo2024.services.admins.AdminAuthService;
+import studi.doryanbessiere.jo2024.services.admins.dto.AdminMeResponse;
 import studi.doryanbessiere.jo2024.services.offers.Offer;
 import studi.doryanbessiere.jo2024.services.offers.OfferController;
 import studi.doryanbessiere.jo2024.services.offers.OfferService;
+import studi.doryanbessiere.jo2024.shared.security.AdminOnlyAspect;
 
 import java.util.List;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-@Import(SecurityConfig.class)
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@Import({SecurityConfig.class, AdminOnlyAspect.class})
+@EnableAspectJAutoProxy
 @WebMvcTest(OfferController.class)
 @AutoConfigureMockMvc
-@Disabled
 class OfferControllerTest {
+
+    private static final String AUTHORIZATION = "Authorization";
+    private static final String BEARER_TOKEN = "Bearer admin-token";
 
     @Autowired
     private MockMvc mockMvc;
@@ -36,8 +46,11 @@ class OfferControllerTest {
     @MockBean
     private OfferService offerService;
 
+    @MockBean
+    private AdminAuthService adminAuthService;
+
     @Test
-    @DisplayName("GET /api/offers doit retourner la liste des offres")
+    @DisplayName("GET /offers doit retourner la liste des offres")
     void getAllOffers_shouldReturnList() throws Exception {
         Offer offer1 = Offer.builder()
                 .id(1L)
@@ -59,7 +72,7 @@ class OfferControllerTest {
 
         Mockito.when(offerService.getAllOffers()).thenReturn(List.of(offer1, offer2));
 
-        mockMvc.perform(get("/api/offers"))
+        mockMvc.perform(get("/offers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].name").value("Pack Cérémonie d’ouverture"))
@@ -67,7 +80,7 @@ class OfferControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/offers/{id} doit retourner une offre spécifique")
+    @DisplayName("GET /offers/{id} doit retourner une offre spécifique")
     void getOfferById_shouldReturnOffer() throws Exception {
         Offer offer = Offer.builder()
                 .id(1L)
@@ -80,7 +93,7 @@ class OfferControllerTest {
 
         Mockito.when(offerService.getOfferById(1L)).thenReturn(offer);
 
-        mockMvc.perform(get("/api/offers/1"))
+        mockMvc.perform(get("/offers/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Pack Cérémonie d’ouverture"))
                 .andExpect(jsonPath("$.price").value(150.0))
@@ -89,9 +102,10 @@ class OfferControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    @DisplayName("POST /api/offers doit créer une offre (admin)")
+    @DisplayName("POST /offers doit créer une offre (admin)")
     void createOffer_shouldReturnCreatedOffer_whenAdmin() throws Exception {
+        adminIsAuthorized();
+
         Offer offer = Offer.builder()
                 .id(1L)
                 .name("Pack Athlétisme")
@@ -103,7 +117,8 @@ class OfferControllerTest {
 
         Mockito.when(offerService.createOffer(any(Offer.class))).thenReturn(offer);
 
-        mockMvc.perform(post("/api/offers")
+        mockMvc.perform(post("/offers")
+                        .header(AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -121,9 +136,10 @@ class OfferControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    @DisplayName("PUT /api/offers/{id} doit mettre à jour une offre (admin)")
+    @DisplayName("PUT /offers/{id} doit mettre à jour une offre (admin)")
     void updateOffer_shouldReturnUpdatedOffer_whenAdmin() throws Exception {
+        adminIsAuthorized();
+
         Offer updated = Offer.builder()
                 .id(1L)
                 .name("Pack modifié")
@@ -135,7 +151,8 @@ class OfferControllerTest {
 
         Mockito.when(offerService.updateOffer(eq(1L), any(Offer.class))).thenReturn(updated);
 
-        mockMvc.perform(put("/api/offers/1")
+        mockMvc.perform(put("/offers/1")
+                        .header(AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -153,20 +170,25 @@ class OfferControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    @DisplayName("DELETE /api/offers/{id} doit supprimer une offre (admin)")
+    @DisplayName("DELETE /offers/{id} doit supprimer une offre (admin)")
     void deleteOffer_shouldReturnNoContent_whenAdmin() throws Exception {
-        mockMvc.perform(delete("/api/offers/1"))
+        adminIsAuthorized();
+
+        mockMvc.perform(delete("/offers/1")
+                        .header(AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isNoContent());
 
         Mockito.verify(offerService).deleteOffer(1L);
     }
 
     @Test
-    @WithMockUser(roles = "CUSTOMER")
-    @DisplayName("POST /api/offers doit être interdit pour un utilisateur non-admin")
-    void createOffer_shouldReturnForbidden_whenNotAdmin() throws Exception {
-        mockMvc.perform(post("/api/offers")
+    @DisplayName("POST /offers renvoie 403 quand le rôle n'est pas ADMIN")
+    void createOffer_shouldReturnForbidden_whenNotAdminRole() throws Exception {
+        Mockito.when(adminAuthService.getAuthenticatedAdmin("admin-token"))
+                .thenReturn(new AdminMeResponse("controller@jo2024.fr", "Contrôleur", "SCANNER"));
+
+        mockMvc.perform(post("/offers")
+                        .header(AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -177,6 +199,14 @@ class OfferControllerTest {
                                   "quantity": 10
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("access_denied"));
+    }
+
+    private void adminIsAuthorized() {
+        // Simule un compte avec le rôle ADMIN pour satisfaire l'aspect @AdminOnly.
+        Mockito.when(adminAuthService.getAuthenticatedAdmin("admin-token"))
+                .thenReturn(new AdminMeResponse("admin@jo2024.fr", "Admin User", "ADMIN"));
     }
 }
