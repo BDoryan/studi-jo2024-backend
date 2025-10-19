@@ -17,6 +17,9 @@ import lombok.*;
 @Schema(description = "Entité représentant un administrateur enregistré dans le système")
 public class Admin {
 
+    public static final String ROLE_ADMIN = "ADMIN";
+    public static final String ROLE_SCANNER = "SCANNER";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(description = "Identifiant unique de l’administrateur", example = "1")

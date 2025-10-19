@@ -16,7 +16,6 @@ import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
 import studi.doryanbessiere.jo2024.services.customers.dto.ResetPasswordRequest;
 import studi.doryanbessiere.jo2024.shared.JwtService;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -135,11 +134,6 @@ public class CustomerAuthService {
         log.info("Password reset email enqueued for email={}", user.getEmail());
     }
 
-    /**
-     * Cette méthode réinitialise le mot de passe d'un client.
-     *
-     * @param req la requête de réinitialisation de mot de passe contenant le token et le nouveau mot de passe
-     */
     public void resetPassword(ResetPasswordRequest req) {
         var user = customerRepository.findAll().stream()
                 .filter(u -> req.getToken().equals(u.getExpireToken()))
@@ -157,12 +151,6 @@ public class CustomerAuthService {
         log.info("Password successfully reset for email={}", user.getEmail());
     }
 
-    /**
-     * Cette méthode récupère le client authentifié à partir du token JWT.
-     *
-     * @param token le token JWT
-     * @return le client authentifié
-     */
     public Customer getAuthenticatedCustomer(String token) {
         if (!jwtService.isValid(token)) {
             log.warn("Invalid JWT provided during customer lookup");
