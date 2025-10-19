@@ -8,18 +8,23 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import studi.doryanbessiere.jo2024.common.Routes;
 import studi.doryanbessiere.jo2024.common.dto.ApiMessageResponse;
+import studi.doryanbessiere.jo2024.services.customers.Customer;
 import studi.doryanbessiere.jo2024.services.customers.CustomerRepository;
 import studi.doryanbessiere.jo2024.services.tickets.dto.*;
 import studi.doryanbessiere.jo2024.shared.security.AdminOnly;
+
+import java.util.List;
 
 @RestController
 @RequestMapping(Routes.Tickets.BASE)
 @RequiredArgsConstructor
 @Tag(name = "Tickets - Scan et validation", description = "Opérations d’inspection et validation de billets par les agents autorisés.")
+@Slf4j
 public class TicketController {
 
     private final TicketRepository ticketRepository;
@@ -34,24 +39,23 @@ public class TicketController {
                     - les informations du billet
                     - les détails du client associé
                     
-                    ⚠️ Le ticket n’est **pas encore désactivé** à cette étape.
+                    Le ticket n’est **pas encore désactivé** à cette étape.
                     """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @ApiResponse(responseCode = "200", description = "Ticket trouvé",
+    @ApiResponse(responseCode = "200", description = "Ticket trouvé avec succès",
             content = @Content(schema = @Schema(implementation = TicketScanResponse.class)))
     @ApiResponse(responseCode = "400", description = "Ticket introuvable", content = @Content)
     public ResponseEntity<?> scanTicket(@Valid @RequestBody ScanTicketRequest request) {
-        var ticket = ticketRepository.findAll()
-                .stream()
-                .filter(t -> t.getSecretKey().equals(request.getTicketSecret()))
-                .findFirst()
+        Ticket ticket = ticketRepository.findBySecretKeyIgnoreCase(request.getTicketSecret())
                 .orElse(null);
 
-        if (ticket == null)
-            return ResponseEntity.badRequest().body(new ApiMessageResponse("error", "Ticket introuvable."));
+        if (ticket == null) {
+            return ResponseEntity.badRequest().body(new ApiMessageResponse("error", "ticket_not_found"));
+        }
 
-        var customer = ticket.getTransaction().getCustomer();
+        Customer customer = ticket.getTransaction().getCustomer();
+
         var response = TicketScanResponse.builder()
                 .ticketId(ticket.getId())
                 .status(ticket.getStatus())
@@ -91,18 +95,14 @@ public class TicketController {
                 .orElse(null);
 
         if (ticket == null)
-            return ResponseEntity.badRequest().body(new ApiMessageResponse("error", "Ticket introuvable."));
+            return ResponseEntity.badRequest().body(new ApiMessageResponse("error", "ticket_not_found"));
 
         if (ticket.getStatus() == Ticket.Status.USED)
-            return ResponseEntity.badRequest().body(new ApiMessageResponse("error", "Ticket déjà utilisé."));
-
-        var customer = ticket.getTransaction().getCustomer();
-        if (!customer.getId().equals(request.getCustomerId()))
-            return ResponseEntity.badRequest().body(new ApiMessageResponse("error", "Le client ne correspond pas au détenteur du ticket."));
+            return ResponseEntity.badRequest().body(new ApiMessageResponse("error", "ticket_already_used"));
 
         ticket.setStatus(Ticket.Status.USED);
         ticketRepository.save(ticket);
 
-        return ResponseEntity.ok(new ApiMessageResponse("success", "Ticket validé et désactivé avec succès."));
+        return ResponseEntity.ok(new ApiMessageResponse("success", "ticket_validated_successfully"));
     }
 }
