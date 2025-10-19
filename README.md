@@ -1,108 +1,120 @@
 # STUDI | JO 2024 – Plateforme de billetterie
 
-> Application Spring Boot permettant la vente, le paiement et la validation des billets des Jeux Olympiques 2024.
+> Application Spring Boot pour la vente, le paiement et la validation de billets des Jeux Olympiques 2024.
 
-- Application publique : https://jo2024.doryanbessiere.fr/
-- Interface administrateur : http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo
-- Documentation API (Swagger UI) : https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html
-
----
-
-## Introduction du projet
-
-La plateforme **JO 2024** propose une expérience de bout en bout pour l’achat de billets : consultation des offres, paiement sécurisé via Stripe, génération de billets et contrôle à l’entrée.  
-Le projet a été réalisé dans le cadre de l’ECF Studi et est composé :
-
-- d’un backend **Spring Boot 3 / Java 21** (ce dépôt) ;
-- d’un frontend public et d’un backoffice administrateur (applications séparées) ;
-- d’intégrations externes : Stripe (paiement) et SMTP (notifications e-mail).
+* Application publique : [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
+* Interface administrateur : [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
+* Documentation API : [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
 
 ---
 
-## Architecture globale de la solution
+## Présentation du projet
 
-La solution suit une architecture hexagonale légère organisée par domaines métiers.
+Le projet **JO 2024** est une plateforme complète de billetterie permettant d’acheter des offres, d’effectuer un paiement sécurisé via Stripe, puis de générer et valider les billets à l’entrée.
+Il a été développé dans le cadre de l’ECF Studi et se compose :
 
-https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA
-
-- **Contrôleurs REST** exposent les endpoints publics.
-- **Services métiers** encapsulent la logique (authentification, paiement, génération de billets…).
-- **Repositories Spring Data JPA** orchestrent la persistance.
-- **Aspects AOP** (`@AdminOnly`, `@CustomerOnly`) renforcent les contrôles d’accès.
-- **Configuration** centralise Stripe, CORS, sécurité et initialisation des comptes.
+* d’un **backend Spring Boot 3 / Java 21** (ce dépôt) ;
+* d’un **frontend public** et d’un **backoffice administrateur** séparés ;
+* d’intégrations externes comme **Stripe** pour les paiements et **SMTP** pour l’envoi d’e-mails.
 
 ---
 
-## Modélisation (MCD / diagramme de classes)
+## Architecture du projet
 
-| Entité | Description | Attributs clés | Relations |
-| --- | --- | --- | --- |
-| `Customer` | Acheteur en front-office. | `id`, `firstName`, `lastName`, `email` (unique), `password`, `secretKey`, `expireToken`. | 1 -* `Transaction` (via `Transaction.customer`), tickets via `customerSecret`. |
-| `Admin` | Utilisateur backoffice (rôles `ADMIN`/`SCANNER`). | `id`, `email` (unique), `password`, `fullName`, `role`. | Authentification dédiée, pas de relation directe aux billets. |
-| `Offer` | Offre commerciale (pack de billets). | `id`, `name`, `description`, `price`, `persons`, `quantity`, `active`. | Consultée via API publique, référencée par `Transaction.offerId`. |
-| `Transaction` | Session d’achat Stripe. | `id`, `stripeSessionId`, `offerId`, `offerName`, `amount`, `status`, `createdAt`. | `ManyToOne` vers `Customer`, 1 -* `Ticket`. |
-| `Ticket` | Billet généré après paiement. | `id`, `secretKey`, `customerSecret`, `entriesAllowed`, `status`, `createdAt`. | `ManyToOne` vers `Transaction`. |
+L’application suit une architecture claire, organisée par domaines métiers.
 
-**Principes de modélisation :**
+Schéma global :
+[https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA](https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA)
 
-- Les billets sont générés **après confirmation Stripe** (`checkout.session.completed`) afin de garantir qu’une transaction `PAID` a bien été enregistrée.
-- Le lien entre `Ticket` et `Customer` est indirect (via `customerSecret`) pour simplifier l’exposition d’identifiants non sensibles côté client.
-- `Transaction` conserve un snapshot de l’offre (`offerName`, `offerId`, `amount`) pour historiser la commande même si l’offre change.
-- Les validations de mot de passe (`ValidPassword`, `PasswordMatches`) et d’unicité e-mail (`UniqueEmailValidator`) sont mutualisées via `common.validation`.
+* Les **contrôleurs REST** exposent les routes de l’API.
+* Les **services** contiennent la logique principale (authentification, paiement, génération de billets, etc.).
+* Les **repositories JPA** gèrent l’accès à la base de données.
+* Les **aspects AOP** (`@AdminOnly`, `@CustomerOnly`) assurent les contrôles d’accès.
+* La **configuration** regroupe la sécurité, CORS, Stripe et l’initialisation des comptes par défaut.
 
 ---
 
-## Documentation API (Swagger)
+## Modèle de données (MCD / classes principales)
 
-Les contrôleurs REST exposés par l’API sont décrits dans la documentation Swagger disponible à `/swagger-ui/index.html`. Récapitulatif des requêtes :
+| Entité        | Rôle                                         | Champs clés                                                           | Relations                                        |
+| ------------- | -------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------ |
+| `Customer`    | Client du site.                              | `id`, `firstName`, `lastName`, `email`, `password`, `secretKey`       | 1 -* `Transaction`, accès indirect aux tickets.  |
+| `Admin`       | Utilisateur du backoffice (ADMIN / SCANNER). | `id`, `email`, `password`, `fullName`, `role`                         | Authentification indépendante.                   |
+| `Offer`       | Offre commerciale (pack de billets).         | `id`, `name`, `description`, `price`, `persons`, `quantity`, `active` | Référencée dans `Transaction`.                   |
+| `Transaction` | Achat Stripe.                                | `id`, `stripeSessionId`, `offerName`, `amount`, `status`, `createdAt` | Liée à un `Customer`, génère plusieurs `Ticket`. |
+| `Ticket`      | Billet émis après paiement.                  | `id`, `secretKey`, `entriesAllowed`, `status`, `createdAt`            | Lié à une `Transaction`.                         |
 
-### CustomerAuthController
-- `POST /auth/customer/register`
-- `POST /auth/customer/login`
-- `GET /auth/customer/me`
-- `GET /auth/customer/me/tickets`
+### Points clés :
 
-### AdminAuthController
-- `POST /auth/admin/login`
-- `GET /auth/admin/me`
-
-### OfferController
-- `GET /offers`
-- `GET /offers/{id}`
-- `POST /offers`
-- `PUT /offers/{id}`
-- `DELETE /offers/{id}`
-
-### PaymentController
-- `POST /payments/checkout`
-- `GET /payments/status/{session_id}`
-
-### StripeWebhookController
-- `POST /stripe/webhook`
-
-### TicketController
-- `POST /tickets/scan`
-- `POST /tickets/validate`
+* Les billets sont créés **uniquement après la confirmation Stripe** (`checkout.session.completed`).
+* Le lien entre un ticket et un client passe par un **identifiant interne non sensible** (`customerSecret`).
+* Chaque transaction garde une copie des infos de l’offre (nom, prix) même si celle-ci change plus tard.
+* Les validations de mot de passe et d’e-mail sont gérées via des annotations personnalisées.
 
 ---
 
-## Sécurité de l’application
+## Endpoints principaux (Swagger)
 
-- **Stateless JWT** : signatures HMAC-SHA via `JwtService`, durée de vie configurable (`app.jwt.expiration-ms`).
-- **Spring Security 6** : configuration `SecurityConfig` (CORS, CSRF off, sessions stateless, encodage Bcrypt).
-- **Contrôles d’accès métiers** : annotations `@AdminOnly` et `@CustomerOnly` reposant sur des aspects AOP (`shared/security`) pour vérifier le rôle extrait du JWT.
-- **Gestion centralisée des erreurs** : `GlobalExceptionHandler` renvoie des réponses JSON homogènes (`status`, `message`, `errors`).
-- **Validation des données** : contraintes Bean Validation (password strength, matching, unique e-mail), retours formatés (`errors.<champ>`).
-- **Webhooks Stripe** : vérification de la signature (`stripe.webhook.secret`) et états idempotents côté transactions.
-- **CORS** : origine autorisée configurable (`CORS_ALLOWED_ORIGIN`), support des requêtes avec cookies / headers personnalisés.
+La documentation complète est disponible sur `/swagger-ui/index.html`.
 
-- Application : https://jo2024.doryanbessiere.fr/
-- Application administrateur : http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo
-- API : https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html
+### Authentification client
 
-# Stripe for connect Webhook:
-``stripe listen --forward-to localhost:8080/stripe/webhook
-``
-# Stripe for connect Webhook:
-``stripe listen --forward-to localhost:8080/stripe/webhook
-``
+* `POST /auth/customer/register`
+* `POST /auth/customer/login`
+* `GET /auth/customer/me`
+* `GET /auth/customer/me/tickets`
+
+### Authentification admin
+
+* `POST /auth/admin/login`
+* `GET /auth/admin/me`
+
+### Offres
+
+* `GET /offers`
+* `GET /offers/{id}`
+* `POST /offers`
+* `PUT /offers/{id}`
+* `DELETE /offers/{id}`
+
+### Paiement
+
+* `POST /payments/checkout`
+* `GET /payments/status/{session_id}`
+
+### Webhook Stripe
+
+* `POST /stripe/webhook`
+
+### Tickets
+
+* `POST /tickets/scan`
+* `POST /tickets/validate`
+
+---
+
+## Sécurité
+
+* **JWT stateless** : génération et vérification de tokens signés (HMAC-SHA) via `JwtService`.
+* **Spring Security 6** : configuration `SecurityConfig`, sessions désactivées, Bcrypt pour les mots de passe.
+* **Contrôles d’accès** : annotations `@AdminOnly` et `@CustomerOnly` vérifiant le rôle dans le JWT.
+* **Gestion d’erreurs unifiée** : `GlobalExceptionHandler` pour des réponses JSON cohérentes.
+* **Validation des données** : contraintes standard (force du mot de passe, e-mail unique, etc.).
+* **Webhooks Stripe** : signature vérifiée via la clé secrète et gestion des doublons.
+* **CORS** : origine autorisée configurable (`CORS_ALLOWED_ORIGIN`), compatible avec les headers personnalisés.
+
+---
+
+### Accès rapides
+
+* Application publique : [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
+* Administration : [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
+* API (Swagger) : [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
+
+---
+
+### Commande utile (Webhook Stripe)
+
+```
+stripe listen --forward-to localhost:8080/stripe/webhook
+```
