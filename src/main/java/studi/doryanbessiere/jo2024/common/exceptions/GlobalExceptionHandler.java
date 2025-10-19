@@ -51,6 +51,7 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         if (ex instanceof BadRequestException) status = HttpStatus.BAD_REQUEST;
         else if (ex instanceof UnauthorizedException) status = HttpStatus.UNAUTHORIZED;
+        else if (ex instanceof AccessDeniedException) status = HttpStatus.FORBIDDEN;
         else if (ex instanceof ConflictException) status = HttpStatus.CONFLICT;
 
         Map<String, Object> response = new HashMap<>();

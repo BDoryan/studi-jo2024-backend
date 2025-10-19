@@ -35,9 +35,7 @@ public class OpenApiConfig {
         open_api.setInfo(new Info()
                         .title("API Jeux Olympiques 2024")
                         .description("""
-                                Bienvenue sur la documentation de l'API des Jeux Olympiques 2024 !
-                                
-                                Remplir des informations
+                                Bienvenue sur la documentation de l'API de billetterie des Jeux Olympiques 2024 !
                                 """)
                         .version("1.0.0")
                         .contact(new Contact()
