@@ -13,6 +13,7 @@ public final class Routes {
             public static final String REGISTER = "/register";
             public static final String LOGIN = "/login";
             public static final String ME = "/me";
+            public static final String ME_TICKETS = "/me/tickets";
 
 
             public static final String FORGOT_PASSWORD = "/forgot-password";
@@ -26,10 +27,17 @@ public final class Routes {
         }
     }
 
+    public static final class Tickets {
+        public static final String BASE = "/tickets";
+        public static final String SCAN = "/scan";
+        public static final String VALIDATE = "/validate";
+    }
+
     public static final class Payment {
 
         public static final String BASE = "/payments";
         public static final String CHECKOUT = "/checkout";
+        public static final String STATUS = "/status/{session_id}";
 
     }
 

@@ -161,12 +161,7 @@ public class CustomerAuthService {
         return customerRepository.findByEmail(email)
                 .map(customer -> {
                     log.debug("Authenticated customer retrieved email={}", email);
-                    return Customer.builder()
-                            .id(customer.getId())
-                            .firstName(customer.getFirstName())
-                            .lastName(customer.getLastName())
-                            .email(customer.getEmail())
-                            .build();
+                    return customer;
                 })
                 .orElseThrow(() -> {
                     log.warn("Authenticated customer not found for email={}", email);
