@@ -9,4 +9,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     boolean existsBySecretKey(String secretKey);
     Optional<Ticket> findByTransactionId(Long transactionId);
     List<Ticket> findAllByCustomerSecretOrderByCreatedAtDesc(String customerSecret);
+
+    Optional<Ticket> findBySecretKeyIgnoreCase(String secretKey);
 }
