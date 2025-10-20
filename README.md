@@ -34,7 +34,7 @@ Schéma global :
 
 ---
 
-## Modèle de données (MCD / classes principales)
+## Modèle de données (MCD)
 
 <img src="https://github.com/BDoryan/studi-jo2024-backend/blob/master/docs/imgs/mcd.png?raw=true" alt="MCD JO 2024" width="600"/>
 
