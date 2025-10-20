@@ -7,7 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
             response.put("status", "error");
             response.put("message", "validation_failed");
             response.put("errors", errors);
-            response.put("timestamp", LocalDateTime.now().toString());
+            response.put("timestamp", OffsetDateTime.now().toString());
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "error");
         response.put("message", ex.getMessage());
-        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("timestamp", OffsetDateTime.now().toString());
 
         return ResponseEntity.status(status).body(response);
     }

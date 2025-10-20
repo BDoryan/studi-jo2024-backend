@@ -2,7 +2,6 @@ package studi.doryanbessiere.jo2024.services.customers;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customers")

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import studi.doryanbessiere.jo2024.services.customers.Customer;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -37,7 +37,7 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     private TransactionStatus status;
 
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     public static enum TransactionStatus {
         PENDING,
@@ -48,7 +48,7 @@ public class Transaction {
     @PrePersist
     public void onCreate() {
         if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
+            this.createdAt = OffsetDateTime.now();
         }
         if (this.status == null) {
             this.status = TransactionStatus.PENDING;
