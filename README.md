@@ -36,7 +36,8 @@ Schéma global :
 
 ## Modèle de données (MCD / classes principales)
 
-<img src="https://github.com/BDoryan/studi-jo2024-backend/blob/master/docs/mcd.png?raw=true" alt="MCD JO 2024" width="600"/>
+<img src="https://github.com/BDoryan/studi-jo2024-backend/blob/master/docs/mcd_mvp1.png?raw=true" alt="MCD JO 2024" width="600"/>
+
 ### Points clés :
 
 * Les billets sont créés **uniquement après la confirmation Stripe** (`checkout.session.completed`).
@@ -49,42 +50,6 @@ Schéma global :
 ## Endpoints principaux (Swagger)
 
 La documentation complète est disponible sur [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
-
-### Authentification client
-
-* `POST /auth/customer/register`
-* `POST /auth/customer/login`
-* `GET /auth/customer/me`
-* `GET /auth/customer/me/tickets`
-
-### Authentification admin
-
-* `POST /auth/admin/login`
-* `GET /auth/admin/me`
-
-### Offres
-
-* `GET /offers`
-* `GET /offers/{id}`
-* `POST /offers`
-* `PUT /offers/{id}`
-* `DELETE /offers/{id}`
-
-### Paiement
-
-* `POST /payments/checkout`
-* `GET /payments/status/{session_id}`
-
-### Webhook Stripe
-
-* `POST /stripe/webhook`
-
-### Tickets
-
-* `POST /tickets/scan`
-* `POST /tickets/validate`
-
----
 
 ## Sécurité
 
