@@ -1,11 +1,13 @@
 package studi.doryanbessiere.jo2024.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -13,10 +15,15 @@ import studi.doryanbessiere.jo2024.common.Routes;
 import studi.doryanbessiere.jo2024.common.exceptions.InvalidCredentialsException;
 import studi.doryanbessiere.jo2024.common.validation.password.PasswordMatches;
 import studi.doryanbessiere.jo2024.common.validation.password.ValidPassword;
+import studi.doryanbessiere.jo2024.notifications.EmailNotificationService;
 import studi.doryanbessiere.jo2024.services.customers.CustomerAuthController;
 import studi.doryanbessiere.jo2024.services.customers.CustomerAuthService;
 import studi.doryanbessiere.jo2024.services.customers.CustomerRepository;
 import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorTokenRepository;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -42,9 +49,16 @@ class CustomerAuthControllerTest {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private TwoFactorTokenRepository twoFactorTokenRepository;
+
+    @MockBean
+    private EmailNotificationService emailNotificationService;
+
     @BeforeEach
     void cleanDatabase() {
         customerRepository.deleteAll();
+        twoFactorTokenRepository.deleteAll();
     }
 
     // Valid register
@@ -134,7 +148,7 @@ class CustomerAuthControllerTest {
 
 
     }@Test
-    void shouldLoginSuccessfully() throws Exception {
+    void shouldLoginSuccessfullyWithTwoFactorValidation() throws Exception {
         // Create a customer first
         RegisterRequest register = new RegisterRequest();
         register.setFirstname("Paul");
@@ -145,16 +159,35 @@ class CustomerAuthControllerTest {
         customerAuthService.register(register);
 
         // Now attempt to login
-        var loginPayload = new java.util.HashMap<String, String>();
+        var loginPayload = new HashMap<String, String>();
         loginPayload.put("email", "paul@example.com");
         loginPayload.put("password", "Test1234");
 
-        mockMvc.perform(post(Routes.Auth.Customer.BASE + Routes.Auth.Customer.LOGIN)
+        var loginResult = mockMvc.perform(post(Routes.Auth.Customer.BASE + Routes.Auth.Customer.LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginPayload)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists());
+                .andExpect(jsonPath("$.two_factor_required").value(true))
+                .andExpect(jsonPath("$.challenge_id").exists())
+                .andReturn();
+
+        JsonNode json = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        String challengeId = json.get("challenge_id").asText();
+
+        var storedToken = twoFactorTokenRepository.findById(challengeId).orElseThrow();
+
+        Map<String, String> verifyPayload = Map.of(
+                "challenge_id", challengeId,
+                "code", storedToken.getCode()
+        );
+
+        mockMvc.perform(post(Routes.Auth.Customer.BASE + Routes.Auth.Customer.VERIFY_LOGIN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(verifyPayload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.two_factor_required").value(false));
     }
 
     @Test

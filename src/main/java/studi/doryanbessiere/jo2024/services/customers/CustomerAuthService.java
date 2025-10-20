@@ -8,13 +8,18 @@ import org.springframework.stereotype.Service;
 import studi.doryanbessiere.jo2024.common.exceptions.BadRequestException;
 import studi.doryanbessiere.jo2024.common.exceptions.InvalidCredentialsException;
 import studi.doryanbessiere.jo2024.common.exceptions.UnauthorizedException;
+import studi.doryanbessiere.jo2024.shared.dto.TwoFactorVerificationRequest;
 import studi.doryanbessiere.jo2024.notifications.EmailNotificationService;
 import studi.doryanbessiere.jo2024.notifications.dto.EmailRequest;
 import studi.doryanbessiere.jo2024.services.customers.dto.ForgotPasswordRequest;
 import studi.doryanbessiere.jo2024.services.customers.dto.LoginRequest;
 import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
 import studi.doryanbessiere.jo2024.services.customers.dto.ResetPasswordRequest;
+import studi.doryanbessiere.jo2024.services.customers.dto.AuthResponse;
 import studi.doryanbessiere.jo2024.shared.JwtService;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorAuthService;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorToken;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorTokenType;
 
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +38,7 @@ public class CustomerAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailNotificationService emailService;
+    private final TwoFactorAuthService twoFactorAuthService;
 
     private final Environment env;
 
@@ -65,12 +71,12 @@ public class CustomerAuthService {
     }
 
     /**
-     * Cette méthode authentifie un client et génère un token JWT.
+     * Cette méthode vérifie les identifiants du client, crée un challenge 2FA et envoie le code par e-mail.
      *
      * @param req la requête de connexion contenant les identifiants du client
-     * @return le token JWT généré
+     * @return une réponse mentionnant si le second facteur est requis et l'identifiant du challenge
      */
-    public String login(LoginRequest req) {
+    public AuthResponse login(LoginRequest req) {
         var userOpt = customerRepository.findByEmail(req.getEmail());
         if (userOpt.isEmpty()) {
             log.warn("Login attempt with unknown email={}", req.getEmail());
@@ -85,7 +91,13 @@ public class CustomerAuthService {
         }
 
         log.info("Customer authenticated email={}", user.getEmail());
-        return jwtService.generateToken(user.getEmail(), Map.of("role", "CUSTOMER", "uid", user.getId()));
+        String challengeId = twoFactorAuthService.startChallenge(
+                user.getEmail(),
+                user.getFirstName(),
+                TwoFactorTokenType.CUSTOMER
+        );
+
+        return new AuthResponse(null, true, challengeId);
     }
 
     /**
@@ -149,6 +161,24 @@ public class CustomerAuthService {
         user.setExpireToken(null);
         customerRepository.save(user);
         log.info("Password successfully reset for email={}", user.getEmail());
+    }
+
+    public AuthResponse verifyTwoFactor(TwoFactorVerificationRequest request) {
+        TwoFactorToken token = twoFactorAuthService.verifyChallenge(
+                request.getChallengeId(),
+                request.getCode(),
+                TwoFactorTokenType.CUSTOMER
+        );
+
+        var customer = customerRepository.findByEmail(token.getEmail())
+                .orElseThrow(InvalidCredentialsException::new);
+
+        String jwt = jwtService.generateToken(
+                customer.getEmail(),
+                Map.of("role", "CUSTOMER", "uid", customer.getId())
+        );
+
+        return new AuthResponse(jwt, false, null);
     }
 
     public Customer getAuthenticatedCustomer(String token) {

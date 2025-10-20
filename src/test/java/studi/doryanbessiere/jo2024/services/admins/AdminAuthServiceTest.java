@@ -12,7 +12,11 @@ import studi.doryanbessiere.jo2024.common.exceptions.UnauthorizedException;
 import studi.doryanbessiere.jo2024.services.admins.dto.AdminAuthResponse;
 import studi.doryanbessiere.jo2024.services.admins.dto.AdminLoginRequest;
 import studi.doryanbessiere.jo2024.services.admins.dto.AdminMeResponse;
+import studi.doryanbessiere.jo2024.shared.dto.TwoFactorVerificationRequest;
 import studi.doryanbessiere.jo2024.shared.JwtService;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorAuthService;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorToken;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorTokenType;
 
 import java.util.Optional;
 
@@ -30,6 +34,8 @@ class AdminAuthServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtService jwtService;
+    @Mock
+    private TwoFactorAuthService twoFactorAuthService;
 
     @InjectMocks
     private AdminAuthService adminAuthService;
@@ -47,7 +53,7 @@ class AdminAuthServiceTest {
     }
 
     @Test
-    void loginShouldReturnTokenWhenCredentialsAreValid() {
+    void loginShouldReturnChallengeWhenCredentialsAreValid() {
         AdminLoginRequest request = new AdminLoginRequest();
         request.setEmail(admin.getEmail());
         request.setPassword("plain-password");
@@ -55,14 +61,16 @@ class AdminAuthServiceTest {
         // Arrange le dépôt, l'encodeur et le service JWT pour simuler une authentification réussie.
         when(adminRepository.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
         when(passwordEncoder.matches("plain-password", admin.getPassword())).thenReturn(true);
-        when(jwtService.generateToken(admin.getEmail(), "ADMIN")).thenReturn("jwt-token");
+        when(twoFactorAuthService.startChallenge(admin.getEmail(), admin.getFullName(), TwoFactorTokenType.ADMIN))
+                .thenReturn("challenge-id");
 
         AdminAuthResponse response = adminAuthService.login(request);
 
-        assertEquals("jwt-token", response.token());
         assertEquals(admin.getEmail(), response.email());
         assertEquals(admin.getFullName(), response.fullName());
-        verify(jwtService).generateToken(admin.getEmail(), "ADMIN");
+        assertEquals("challenge-id", response.challengeId());
+        assertEquals(true, response.twoFactorRequired());
+        verify(twoFactorAuthService).startChallenge(admin.getEmail(), admin.getFullName(), TwoFactorTokenType.ADMIN);
     }
 
     @Test
@@ -86,6 +94,30 @@ class AdminAuthServiceTest {
         when(passwordEncoder.matches("wrong", admin.getPassword())).thenReturn(false);
 
         assertThrows(InvalidCredentialsException.class, () -> adminAuthService.login(request));
+    }
+
+    @Test
+    void verifyTwoFactorShouldReturnTokenWhenCodeValid() {
+        TwoFactorVerificationRequest request = new TwoFactorVerificationRequest();
+        request.setChallengeId("challenge-123");
+        request.setCode("123456");
+
+        TwoFactorToken token = TwoFactorToken.builder()
+                .email(admin.getEmail())
+                .build();
+
+        when(twoFactorAuthService.verifyChallenge("challenge-123", "123456", TwoFactorTokenType.ADMIN))
+                .thenReturn(token);
+        when(adminRepository.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
+        when(jwtService.generateToken(admin.getEmail(), "ADMIN")).thenReturn("jwt-token");
+
+        AdminAuthResponse response = adminAuthService.verifyTwoFactor(request);
+
+        assertEquals("jwt-token", response.token());
+        assertEquals(admin.getEmail(), response.email());
+        assertEquals(admin.getFullName(), response.fullName());
+        assertEquals(false, response.twoFactorRequired());
+        assertEquals(null, response.challengeId());
     }
 
     @Test

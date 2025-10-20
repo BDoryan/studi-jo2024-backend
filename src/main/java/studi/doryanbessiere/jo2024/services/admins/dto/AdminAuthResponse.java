@@ -15,5 +15,11 @@ public record AdminAuthResponse(
         String email,
 
         @Schema(description = "Nom complet de l'administrateur", example = "Jean Dupont")
-        String fullName
+        String fullName,
+
+        @Schema(description = "Indique si un second facteur est requis", example = "true")
+        boolean twoFactorRequired,
+
+        @Schema(description = "Identifiant du challenge de double authentification", example = "b1f1e3a4-...")
+        String challengeId
 ) {}

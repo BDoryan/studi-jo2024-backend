@@ -21,6 +21,7 @@ import studi.doryanbessiere.jo2024.common.Routes;
 import studi.doryanbessiere.jo2024.services.admins.dto.AdminAuthResponse;
 import studi.doryanbessiere.jo2024.services.admins.dto.AdminLoginRequest;
 import studi.doryanbessiere.jo2024.services.admins.dto.AdminMeResponse;
+import studi.doryanbessiere.jo2024.shared.dto.TwoFactorVerificationRequest;
 
 @RestController
 @RequestMapping(Routes.Auth.Admin.BASE)
@@ -35,7 +36,7 @@ public class AdminAuthController {
     @PostMapping(Routes.Auth.Admin.LOGIN)
     @Operation(
             summary = "Connexion d'un administrateur",
-            description = "Authentifie un administrateur ou un agent de contrôle et renvoie le jeton JWT assorti au rôle."
+            description = "Authentifie les identifiants d'un administrateur puis initie un challenge de double authentification par e-mail."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Authentification réussie",
@@ -46,6 +47,20 @@ public class AdminAuthController {
     public ResponseEntity<AdminAuthResponse> login(@Valid @RequestBody AdminLoginRequest request) {
         log.info("Admin login attempt for email: " + request.getEmail());
         return ResponseEntity.ok(service.login(request));
+    }
+
+    @PostMapping(Routes.Auth.Admin.VERIFY_LOGIN)
+    @Operation(
+            summary = "Valider le code de double authentification administrateur",
+            description = "Vérifie le code reçu par e-mail et renvoie le JWT si la double authentification est validée."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Double authentification validée",
+                    content = @Content(schema = @Schema(implementation = AdminAuthResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Code invalide ou expiré", content = @Content)
+    })
+    public ResponseEntity<AdminAuthResponse> verify(@Valid @RequestBody TwoFactorVerificationRequest request) {
+        return ResponseEntity.ok(service.verifyTwoFactor(request));
     }
 
     @GetMapping(Routes.Auth.Admin.ME)

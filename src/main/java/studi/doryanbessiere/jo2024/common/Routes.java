@@ -12,6 +12,7 @@ public final class Routes {
             public static final String BASE = Auth.BASE + "/customer";
             public static final String REGISTER = "/register";
             public static final String LOGIN = "/login";
+            public static final String VERIFY_LOGIN = "/login/verify";
             public static final String ME = "/me";
             public static final String ME_TICKETS = "/me/tickets";
 
@@ -24,6 +25,7 @@ public final class Routes {
             public static final String BASE = Auth.BASE + "/admin";
             public static final String LOGIN = "/login";
             public static final String ME = "/me";
+            public static final String VERIFY_LOGIN = "/login/verify";
         }
     }
 

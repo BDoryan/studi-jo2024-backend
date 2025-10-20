@@ -2,17 +2,18 @@ package studi.doryanbessiere.jo2024.services.admins;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import studi.doryanbessiere.jo2024.common.Routes;
 import studi.doryanbessiere.jo2024.common.exceptions.UnauthorizedException;
-import studi.doryanbessiere.jo2024.services.admins.dto.*;
-import studi.doryanbessiere.jo2024.services.customers.Customer;
-import studi.doryanbessiere.jo2024.shared.JwtService;
 import studi.doryanbessiere.jo2024.common.exceptions.InvalidCredentialsException;
+import studi.doryanbessiere.jo2024.services.admins.dto.AdminAuthResponse;
+import studi.doryanbessiere.jo2024.services.admins.dto.AdminLoginRequest;
+import studi.doryanbessiere.jo2024.services.admins.dto.AdminMeResponse;
+import studi.doryanbessiere.jo2024.shared.JwtService;
+import studi.doryanbessiere.jo2024.shared.dto.TwoFactorVerificationRequest;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorAuthService;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorToken;
+import studi.doryanbessiere.jo2024.shared.twofactor.TwoFactorTokenType;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class AdminAuthService {
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final TwoFactorAuthService twoFactorAuthService;
 
     public AdminAuthResponse login(AdminLoginRequest request) {
         var admin = adminRepository.findByEmail(request.getEmail())
@@ -31,8 +33,27 @@ public class AdminAuthService {
             throw new InvalidCredentialsException();
         }
 
-        String token = jwtService.generateToken(admin.getEmail(), "ADMIN");
-        return new AdminAuthResponse(token, admin.getEmail(), admin.getFullName());
+        String challengeId = twoFactorAuthService.startChallenge(
+                admin.getEmail(),
+                admin.getFullName(),
+                TwoFactorTokenType.ADMIN
+        );
+
+        return new AdminAuthResponse(null, admin.getEmail(), admin.getFullName(), true, challengeId);
+    }
+
+    public AdminAuthResponse verifyTwoFactor(TwoFactorVerificationRequest request) {
+        TwoFactorToken token = twoFactorAuthService.verifyChallenge(
+                request.getChallengeId(),
+                request.getCode(),
+                TwoFactorTokenType.ADMIN
+        );
+
+        Admin admin = adminRepository.findByEmail(token.getEmail())
+                .orElseThrow(UnauthorizedException::new);
+
+        String jwt = jwtService.generateToken(admin.getEmail(), "ADMIN");
+        return new AdminAuthResponse(jwt, admin.getEmail(), admin.getFullName(), false, null);
     }
 
     public AdminMeResponse getAuthenticatedAdmin(String token) {

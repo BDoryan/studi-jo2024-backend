@@ -134,6 +134,16 @@ Deux flux distincts sont gérés :
 * **Réinitialisation de mot de passe** : lorsqu'un utilisateur initie un reset, un **token temporaire** est généré, stocké dans le champ `expireToken` du compte et transmis par e-mail via `EmailNotificationService`. Ce lien contient un identifiant unique non réutilisable.
 
 ---
+- **JWT signés** : `JwtService` (`shared/JwtService`) produit des tokens HMAC-SHA256 incluant `subject`, `role`, `uid`,
+  avec expiration configurée (`app.jwt.expiration-ms`).
+- **Flux administrateur** : `AdminAuthService` vérifie le hash BCrypt, délivre un JWT `role=ADMIN` et expose
+  `GET /auth/admin/me`.
+- **Flux client** : `CustomerAuthService` gère inscription, login, récupération de profil et reset password. Les tokens
+  émis portent `role=CUSTOMER` et `uid`.
+- **Réinitialisation de mot de passe** : génération d'un token unique (`expireToken`) persisté puis notification e-mail
+  via `EmailNotificationService`.
+- **2FA pédagogique** : pour éviter les aléas de réception d'e-mails en contexte scolaire, le code de vérification
+  retourné par `TwoFactorAuthService` est volontairement figé à `01102003`.
 
 ### 6.2 Politique de secrets et mots de passe
 

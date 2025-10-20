@@ -1,0 +1,9 @@
+Bonjour {{name}},
+
+Votre code de connexion temporaire est : {{code}}
+Ce code expire dans {{expirationMinutes}} minutes.
+
+Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail.
+
+L'équipe {{appName}}
+

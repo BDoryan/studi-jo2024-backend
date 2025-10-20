@@ -1,0 +1,8 @@
+Bonjour {{name}},
+
+Nous confirmons la réussite de votre paiement pour l'offre "{{offerName}}".
+
+Votre billet est désormais disponible. Rendez-vous dans votre espace client : {{accountUrl}} pour le télécharger.
+
+Merci pour votre confiance,
+{{appName}}
