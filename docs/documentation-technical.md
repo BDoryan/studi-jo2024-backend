@@ -143,7 +143,7 @@ Deux flux distincts sont gérés :
 - **Réinitialisation de mot de passe** : génération d'un token unique (`expireToken`) persisté puis notification e-mail
   via `EmailNotificationService`.
 - **2FA pédagogique** : pour éviter les aléas de réception d'e-mails en contexte scolaire, le code de vérification
-  retourné par `TwoFactorAuthService` est volontairement figé à `01102003`.
+  retourné par `TwoFactorAuthService` est volontairement figé à `011020`.
 
 ### 6.2 Politique de secrets et mots de passe
 

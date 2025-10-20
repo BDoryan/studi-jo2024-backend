@@ -21,7 +21,7 @@ import java.util.UUID;
 @Slf4j
 public class TwoFactorAuthService {
 
-    private static final String FIXED_VERIFICATION_CODE = "01102003";
+    private static final String FIXED_VERIFICATION_CODE = "011020";
 
     private final TwoFactorTokenRepository tokenRepository;
     private final EmailNotificationService emailNotificationService;
