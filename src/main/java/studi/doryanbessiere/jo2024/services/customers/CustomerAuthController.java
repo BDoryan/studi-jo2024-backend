@@ -19,6 +19,7 @@ import studi.doryanbessiere.jo2024.services.customers.dto.RegisterRequest;
 import studi.doryanbessiere.jo2024.services.tickets.TicketService;
 import studi.doryanbessiere.jo2024.services.tickets.dto.TicketResponse;
 import studi.doryanbessiere.jo2024.shared.security.CustomerOnly;
+import studi.doryanbessiere.jo2024.shared.dto.TwoFactorVerificationRequest;
 
 import java.util.List;
 
@@ -60,8 +61,8 @@ public class CustomerAuthController {
     @Operation(
             summary = "Connexion d'un client existant",
             description = """
-                    Cette opération permet à un client existant de se connecter à son compte en fournissant ses identifiants (adresse e-mail et mot de passe).
-                    Si les informations sont correctes, le client recevra un jeton d'authentification (JWT) qui lui permettra d'accéder aux ressources protégées de l'API.
+                    Cette opération valide l'e-mail et le mot de passe d'un client puis lance une double authentification par e-mail.
+                    En cas de succès, un identifiant de challenge est renvoyé et un code est transmis au client pour finaliser la connexion.
                     """
     )
     @ApiResponses(value = {
@@ -73,7 +74,22 @@ public class CustomerAuthController {
 
     @PostMapping(Routes.Auth.Customer.LOGIN)
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
-        return ResponseEntity.ok(new AuthResponse(authService.login(req)));
+        return ResponseEntity.ok(authService.login(req));
+    }
+
+    @PostMapping(Routes.Auth.Customer.VERIFY_LOGIN)
+    @Operation(
+            summary = "Valider le code de double authentification",
+            description = "Vérifie le code reçu par e-mail et renvoie le jeton JWT si le code est valide."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Double authentification validée",
+                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Code invalide ou expiré", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur", content = @Content)
+    })
+    public ResponseEntity<AuthResponse> verifyLogin(@Valid @RequestBody TwoFactorVerificationRequest request) {
+        return ResponseEntity.ok(authService.verifyTwoFactor(request));
     }
 
     @Operation(
@@ -105,7 +121,6 @@ public class CustomerAuthController {
     }
 
     private final TicketService ticketService;
-    private final CustomerAuthService customerAuthService;
 
     @GetMapping(Routes.Auth.Customer.ME_TICKETS)
     @CustomerOnly
@@ -125,7 +140,7 @@ public class CustomerAuthController {
             @RequestHeader("Authorization") String authorizationHeader
     ) {
         String token = authorizationHeader.substring(7);
-        Customer customer = customerAuthService.getAuthenticatedCustomer(token);
+        Customer customer = authService.getAuthenticatedCustomer(token);
         return ResponseEntity.ok(ticketService.getTicketsForCustomer(customer));
     }
 }
