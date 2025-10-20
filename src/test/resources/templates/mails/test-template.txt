@@ -1,0 +1,1 @@
+Bonjour {{firstname}}, votre code est {{code}}.
