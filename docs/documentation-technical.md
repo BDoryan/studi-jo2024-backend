@@ -119,76 +119,110 @@ Les schémas de requêtes/réponses détaillés sont disponibles via Swagger (`/
 
 ### 6.1 Authentification et identité
 
-- **JWT signés** : `JwtService` (`shared/JwtService`) produit des tokens HMAC-SHA256 incluant `subject`, `role`, `uid`,
-  avec expiration configurée (`app.jwt.expiration-ms`).
-- **Flux administrateur** : `AdminAuthService` vérifie le hash BCrypt, délivre un JWT `role=ADMIN` et expose
-  `GET /auth/admin/me`.
-- **Flux client** : `CustomerAuthService` gère inscription, login, récupération de profil et reset password. Les tokens
-  émis portent `role=CUSTOMER` et `uid`.
-- **Réinitialisation de mot de passe** : génération d'un token unique (`expireToken`) persisté puis notification e-mail
-  via `EmailNotificationService`.
+L’API repose sur un **mécanisme d’authentification stateless** fondé sur des **tokens JWT (JSON Web Token)**.
+Chaque jeton, généré par le service `JwtService`, est signé avec l’algorithme **HMAC-SHA256** et contient plusieurs informations sécurisées :
+
+* `subject` (identifiant du compte),
+* `role` (CLIENT ou ADMIN),
+* `uid` (identifiant unique),
+  avec une **durée d’expiration configurable** via la propriété `app.jwt.expiration-ms`.
+
+Deux flux distincts sont gérés :
+
+* **Flux administrateur** : via `POST /auth/admin/login`, le service `AdminAuthService` vérifie le mot de passe haché avec BCrypt. En cas de succès, un JWT avec le rôle `ADMIN` est émis et permet d’accéder aux routes sécurisées comme `GET /auth/admin/me` ou la gestion des offres (`/offers`).
+* **Flux client** : via `POST /auth/customer/register` et `POST /auth/customer/login`, le service `CustomerAuthService` gère l’inscription et la connexion des utilisateurs. Les jetons délivrés contiennent le rôle `CUSTOMER` et permettent d’accéder aux routes personnelles (`/auth/customer/me`, `/auth/customer/me/tickets`).
+* **Réinitialisation de mot de passe** : lorsqu’un utilisateur initie un reset, un **token temporaire** est généré, stocké dans le champ `expireToken` du compte et transmis par e-mail via `EmailNotificationService`. Ce lien contient un identifiant unique non réutilisable.
+
+---
 
 ### 6.2 Politique de secrets et mots de passe
 
-- **Encodage systématique** : `SecurityConfig` fournit un `BCryptPasswordEncoder` utilisé partout (services &
-  `DataInitializer`).
-- **Complexité** : `@ValidPassword` impose 8 caractères mini dont majuscule, minuscule et chiffre.
-- **Double saisie** : `@PasswordMatches` (DTO `RegisterRequest`) garantit la cohérence entre mot de passe et
-  confirmation.
-- **Secrets applicatifs** : clés Stripe, JWT, mot de passe admin (`ADMIN_DEFAULT_PASSWORD`) proviennent de l'
-  `Environment` (jamais commités).
+L’application applique une **politique stricte de protection des identifiants et secrets** :
 
-### 6.3 Contrôle d'accès
+* Les mots de passe sont **hachés avec BCrypt** grâce au `BCryptPasswordEncoder` défini dans `SecurityConfig`.
+* La **complexité** est validée par l’annotation `@ValidPassword` : au minimum 8 caractères avec majuscules, minuscules et chiffres.
+* L’annotation `@PasswordMatches` (sur le DTO `RegisterRequest`) garantit la correspondance entre les champs “mot de passe” et “confirmation”.
+* Toutes les **clés sensibles** (clés Stripe, JWT secret, identifiants SMTP, compte admin par défaut) sont **chargées depuis les variables d’environnement**.
+  Ces valeurs ne figurent jamais dans le code source ni dans le dépôt Git.
 
-- **Cadre stateless** : `SecurityConfig` désactive la session serveur et se repose sur les aspects `@AdminOnly` et
-  `@CustomerOnly`.
-- **Aspects AOP** : `AdminOnlyAspect` et `CustomerOnlyAspect` prélèvent le JWT dans l'en-tête `Authorization`, vérifient
-  sa validité et, pour les admins, le rôle exact. Les erreurs déclenchent `UnauthorizedException` ou
-  `AccessDeniedException`.
-- **Endpoints protégés** : création de session Stripe (`PaymentController`), gestion des offres (`OfferController`) et
-  opérations sur tickets (`TicketController`) sont annotés et documentés par
-  `@SecurityRequirement(name = "bearerAuth")`.
+---
+
+### 6.3 Contrôle d’accès
+
+L’accès aux endpoints sensibles est encadré par un **contrôle d’accès basé sur les rôles (RBAC)**.
+Le `SecurityConfig` désactive toute gestion de session serveur et s’appuie sur des **aspects AOP** associés aux annotations personnalisées :
+
+* `@AdminOnly` : pour les routes d’administration (gestion des offres, validation des tickets, etc.),
+* `@CustomerOnly` : pour les routes clients nécessitant une authentification.
+
+Ces aspects extraient et valident le **token JWT** présent dans l’en-tête `Authorization`.
+En cas d’absence ou d’invalidité du jeton, des exceptions (`UnauthorizedException`, `AccessDeniedException`) sont déclenchées.
+Toutes les routes protégées sont également documentées dans **Swagger** via l’annotation
+`@SecurityRequirement(name = "bearerAuth")`, par exemple :
+
+* `/offers` (création, modification, suppression),
+* `/tickets/scan` et `/tickets/validate`,
+* `/payments/checkout`.
+
+---
 
 ### 6.4 Validation et hygiène des entrées
 
-- **DTO strictement validés** via `jakarta.validation`.
-- **Unicité des e-mails** : `@UniqueEmail` interroge `CustomerRepository`.
-- **Ticketing robuste** : `TicketService` génère des secrets `TCK-...` non prédictibles et empêche les duplicatas (
-  `TicketRepository.existsBySecretKey`).
-- **Gestion centralisée des erreurs** : `GlobalExceptionHandler` mappe les exceptions vers des réponses JSON
-  normalisées.
+L’application garantit la **fiabilité des données entrantes** grâce à plusieurs mécanismes :
 
-### 6.5 Paiement Stripe & webhooks
+* Validation automatique des DTOs via **Jakarta Bean Validation**.
+* Vérification de l’unicité des e-mails à l’aide de l’annotation `@UniqueEmail`, qui interroge le `CustomerRepository`.
+* Génération de **clés de tickets uniques et non prédictibles** (`TCK-XXXXXX`) par le `TicketService`, et contrôle d’unicité avec `TicketRepository.existsBySecretKey()`.
+* Traitement centralisé des erreurs dans `GlobalExceptionHandler`, qui transforme les exceptions en **réponses JSON normalisées** (code HTTP + message clair).
 
-- **Authentification préalable** : `PaymentService` vérifie le client avant de créer la session Stripe (lien
-  transaction ↔ client).
-- **Transactions atomiques** : statut `PENDING` à la création, puis mise à jour `PAID/FAILED` par
-  `StripeWebhookController`.
-- **Vérification de signature** : le webhook reconstruit l'événement via `Webhook.constructEvent` et la clé
-  `stripe.webhook.secret`.
-- **Génération de billets** : seul un paiement confirmé déclenche `TicketService.generateTicketForTransaction`.
+---
+
+### 6.5 Paiement Stripe et webhooks sécurisés
+
+La gestion des paiements est entièrement déléguée au service **Stripe** pour garantir la conformité PCI DSS.
+
+Le processus se déroule ainsi :
+
+1. Le client authentifié appelle `POST /payments/checkout` ; le `PaymentService` vérifie le JWT et associe la transaction au compte utilisateur.
+2. Stripe redirige vers une page de paiement sécurisée.
+3. Une fois le paiement terminé, Stripe appelle automatiquement le webhook `POST /stripe/webhook`.
+   Le `StripeWebhookController` vérifie la **signature du message** à l’aide du secret `stripe.webhook.secret`.
+4. Si la signature est valide et que le paiement est réussi, la transaction passe à l’état `PAID` et
+   `TicketService.generateTicketForTransaction()` génère le **billet électronique unique** (clé `TCK-...`).
+
+Ce système empêche toute falsification ou duplication de billets, tout en assurant que **seuls les paiements validés** aboutissent à une émission de ticket.
+
+---
 
 ### 6.6 Transport et exposition
 
-- **CORS** : `WebCorsConfig` limite les origines (`CORS_ALLOWED_ORIGIN`) et méthodes.
-- **CSRF** : désactivé (API stateless à base de JWT).
-- **Documentation contractuelle** : annotations OpenAPI précisent les exigences de sécurité dans Swagger.
+* Les communications entre le front-end, le serveur et les services externes sont **chiffrées via HTTPS**.
+* Le **CORS** est configuré dans `WebCorsConfig` afin de **limiter les origines autorisées** (variable `CORS_ALLOWED_ORIGIN`) et restreindre les méthodes HTTP exposées.
+* Le **CSRF** est désactivé car l’API repose sur des jetons JWT et n’utilise pas de sessions persistantes.
+* Les exigences d’authentification sont décrites dans la documentation OpenAPI/Swagger pour chaque route nécessitant un token.
+
+---
 
 ### 6.7 Initialisation et configuration
 
-- **Compte admin** : `DataInitializer` crée le compte par défaut uniquement si un mot de passe est fourni.
-- **Configuration externalisée** : `application.properties` contient des valeurs de dev, à overrider en production.
-- **Hooks d'entités** : `@PrePersist` sur `Transaction` et `Ticket` initialisent statut et date pour éviter les
-  incohérences.
+* Le **compte administrateur par défaut** est créé automatiquement au démarrage par `DataInitializer`, uniquement si les variables d’environnement `ADMIN_DEFAULT_EMAIL` et `ADMIN_DEFAULT_PASSWORD` sont présentes.
+* Les **valeurs de configuration** (base de données, SMTP, Stripe, JWT, etc.) sont définies dans `application.properties` et peuvent être surchargées selon l’environnement (développement, préproduction, production).
+* Des **hooks JPA `@PrePersist`** sur les entités `Transaction` et `Ticket` assurent l’initialisation automatique du statut et de la date de création pour éviter toute incohérence dans les données.
 
-## 7. Intégrations externes
+---
 
-- **Stripe Checkout** : `StripeConfig` initialise la clé secrète. `PaymentService` construit la session,
-  `StripeWebhookController` traite les événements (`checkout.session.completed`, `payment_failed`, `expired`…). Les
-  métadonnées conservent l'identifiant de transaction pour corréler le paiement.
-- **E-mails transactionnels** : `EmailNotificationService` s'appuie sur `JavaMailSenderImpl`. Les messages peuvent être
-  templatisés (`TextTemplateEngine`), notamment pour la réinitialisation de mot de passe (ex.
-  `templates/emails/reset-password.txt`, le service `CustomerAuthService` attend un template nommé `forgot-password`).
+### 7. Intégrations externes
+
+#### Stripe Checkout
+
+`StripeConfig` initialise la clé secrète de l’API Stripe.
+Le `PaymentService` construit les sessions de paiement, tandis que `StripeWebhookController` traite les événements (`checkout.session.completed`, `payment_failed`, `expired`).
+Chaque transaction conserve les métadonnées nécessaires pour relier le paiement Stripe au ticket généré dans la base.
+
+#### E-mails transactionnels
+
+Les notifications (inscription, réinitialisation de mot de passe, confirmation d’achat, etc.) sont envoyées par `EmailNotificationService`, basé sur `JavaMailSenderImpl`.
+Les messages sont générés à partir de **templates textuels** (`TextTemplateEngine`) situés dans `src/main/resources/templates/emails/`, garantissant un formatage clair et sécurisé des communications sortantes.
 
 ## 8. Configuration & variables d'environnement
 
