@@ -3,17 +3,17 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <meta http-equiv="x-ua-compatible" content="IE=edge"/>
-<title>Test results - AdminAuthServiceTest</title>
+<title>Test results - EmailNotificationServiceTest</title>
 <link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
 <link href="../css/style.css" rel="stylesheet" type="text/css"/>
 <script src="../js/report.js" type="text/javascript"></script>
 </head>
 <body>
 <div id="content">
-<h1>AdminAuthServiceTest</h1>
+<h1>EmailNotificationServiceTest</h1>
 <div class="breadcrumbs">
-<a href="../index.html">all</a> &gt; 
-<a href="../packages/studi.doryanbessiere.jo2024.services.admins.html">studi.doryanbessiere.jo2024.services.admins</a> &gt; AdminAuthServiceTest</div>
+<a href="../../index.html">all</a> &gt;
+<a href="../packages/studi.doryanbessiere.jo2024.notifications.html">studi.doryanbessiere.jo2024.notifications</a> &gt; EmailNotificationServiceTest</div>
 <div id="summary">
 <table>
 <tr>
@@ -23,7 +23,7 @@
 <tr>
 <td>
 <div class="infoBox" id="tests">
-<div class="counter">6</div>
+<div class="counter">2</div>
 <p>tests</p>
 </div>
 </td>
@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.147s</div>
+<div class="counter">0.112s</div>
 <p>duration</p>
 </div>
 </td>
@@ -78,33 +78,13 @@
 </tr>
 </thead>
 <tr>
-<td class="success">getAuthenticatedAdminShouldReturnProfileWhenTokenValid()</td>
+<td class="success">shouldSendEmailUsingTemplateSuccessfully()</td>
+<td class="success">0.110s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">shouldSendEmailWithoutTemplateSuccessfully()</td>
 <td class="success">0.002s</td>
-<td class="success">passed</td>
-</tr>
-<tr>
-<td class="success">getAuthenticatedAdminShouldThrowWhenAdminMissing()</td>
-<td class="success">0.002s</td>
-<td class="success">passed</td>
-</tr>
-<tr>
-<td class="success">getAuthenticatedAdminShouldThrowWhenTokenInvalid()</td>
-<td class="success">0.002s</td>
-<td class="success">passed</td>
-</tr>
-<tr>
-<td class="success">loginShouldReturnTokenWhenCredentialsAreValid()</td>
-<td class="success">0.002s</td>
-<td class="success">passed</td>
-</tr>
-<tr>
-<td class="success">loginShouldThrowWhenEmailUnknown()</td>
-<td class="success">0.001s</td>
-<td class="success">passed</td>
-</tr>
-<tr>
-<td class="success">loginShouldThrowWhenPasswordInvalid()</td>
-<td class="success">0.138s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -112,7 +92,12 @@
 <div class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2025-10-20T02:14:02.039+02:00  WARN 52485 --- [    Test worker] s.d.j.services.admins.AdminAuthService   : Invalid JWT provided during customer lookup
+<pre>==== DEBUG MAIL ====
+To: jean.dupont@example.com
+Subject: Code de vérification
+Body:
+Bonjour Jean, votre code est 123456.
+====================
 </pre>
 </span>
 </div>
