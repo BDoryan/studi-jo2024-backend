@@ -12,7 +12,7 @@
 <div id="content">
 <h1>OfferControllerTest</h1>
 <div class="breadcrumbs">
-<a href="../../index.html">all</a> &gt;
+<a href="../index.html">all</a> &gt; 
 <a href="../packages/studi.doryanbessiere.jo2024.offers.html">studi.doryanbessiere.jo2024.offers</a> &gt; OfferControllerTest</div>
 <div id="summary">
 <table>
@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.090s</div>
+<div class="counter">0.071s</div>
 <p>duration</p>
 </div>
 </td>
@@ -81,37 +81,37 @@
 <tr>
 <td class="success">POST /offers doit créer une offre (admin)</td>
 <td class="success">createOffer_shouldReturnCreatedOffer_whenAdmin()</td>
-<td class="success">0.015s</td>
+<td class="success">0.017s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">POST /offers renvoie 403 quand le rôle n'est pas ADMIN</td>
 <td class="success">createOffer_shouldReturnForbidden_whenNotAdminRole()</td>
-<td class="success">0.006s</td>
+<td class="success">0.009s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">DELETE /offers/{id} doit supprimer une offre (admin)</td>
 <td class="success">deleteOffer_shouldReturnNoContent_whenAdmin()</td>
-<td class="success">0.005s</td>
+<td class="success">0.006s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">GET /offers doit retourner la liste des offres</td>
 <td class="success">getAllOffers_shouldReturnList()</td>
-<td class="success">0.052s</td>
+<td class="success">0.025s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">GET /offers/{id} doit retourner une offre spécifique</td>
 <td class="success">getOfferById_shouldReturnOffer()</td>
-<td class="success">0.007s</td>
+<td class="success">0.008s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">PUT /offers/{id} doit mettre à jour une offre (admin)</td>
 <td class="success">updateOffer_shouldReturnUpdatedOffer_whenAdmin()</td>
-<td class="success">0.005s</td>
+<td class="success">0.006s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -119,8 +119,8 @@
 <div class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2025-10-20T02:14:01.261+02:00  INFO 52485 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [studi.doryanbessiere.jo2024.offers.OfferControllerTest]: OfferControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2025-10-20T02:14:01.282+02:00  INFO 52485 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration studi.doryanbessiere.jo2024.Jo2024Application for test class studi.doryanbessiere.jo2024.offers.OfferControllerTest
+<pre>2025-10-20T02:49:47.591+02:00  INFO 64091 --- [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [studi.doryanbessiere.jo2024.offers.OfferControllerTest]: OfferControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2025-10-20T02:49:47.614+02:00  INFO 64091 --- [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration studi.doryanbessiere.jo2024.Jo2024Application for test class studi.doryanbessiere.jo2024.offers.OfferControllerTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -131,12 +131,12 @@
 
  :: Spring Boot ::                (v3.3.3)
 
-2025-10-20T02:14:01.316+02:00  INFO 52485 --- [    Test worker] s.d.jo2024.offers.OfferControllerTest    : Starting OfferControllerTest using Java 21.0.8 with PID 52485 (started by doryanbessiere in /home/doryanbessiere/Bureau/Studi/Projets/jo2024)
-2025-10-20T02:14:01.316+02:00  INFO 52485 --- [    Test worker] s.d.jo2024.offers.OfferControllerTest    : No active profile set, falling back to 1 default profile: &quot;default&quot;
-2025-10-20T02:14:01.780+02:00  INFO 52485 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
-2025-10-20T02:14:01.780+02:00  INFO 52485 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
-2025-10-20T02:14:01.781+02:00  INFO 52485 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
-2025-10-20T02:14:01.792+02:00  INFO 52485 --- [    Test worker] s.d.jo2024.offers.OfferControllerTest    : Started OfferControllerTest in 0.505 seconds (process running for 6.074)
+2025-10-20T02:49:47.673+02:00  INFO 64091 --- [    Test worker] s.d.jo2024.offers.OfferControllerTest    : Starting OfferControllerTest using Java 21.0.8 with PID 64091 (started by doryanbessiere in /home/doryanbessiere/Bureau/Studi/Projets/jo2024)
+2025-10-20T02:49:47.673+02:00  INFO 64091 --- [    Test worker] s.d.jo2024.offers.OfferControllerTest    : No active profile set, falling back to 1 default profile: &quot;default&quot;
+2025-10-20T02:49:48.242+02:00  INFO 64091 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2025-10-20T02:49:48.242+02:00  INFO 64091 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2025-10-20T02:49:48.243+02:00  INFO 64091 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2025-10-20T02:49:48.254+02:00  INFO 64091 --- [    Test worker] s.d.jo2024.offers.OfferControllerTest    : Started OfferControllerTest in 0.631 seconds (process running for 6.345)
 </pre>
 </span>
 </div>
@@ -148,7 +148,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="https://www.gradle.org">Gradle 8.14.3</a> at 20 oct. 2025, 02:14:02</p>
+<a href="https://www.gradle.org">Gradle 8.14.3</a> at 20 oct. 2025, 02:49:48</p>
 </div>
 </div>
 </body>

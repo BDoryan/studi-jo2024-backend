@@ -54,4 +54,20 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    doLast {
+        def reportSource = layout.buildDirectory.dir("reports/tests/test").get().asFile
+        def reportTarget = project.file("docs/report/test")
+
+        if (!reportSource.exists()) {
+            logger.lifecycle("Test report source not found at ${reportSource}, skipping copy.")
+            return
+        }
+
+        project.delete(reportTarget)
+        project.copy {
+            from reportSource
+            into reportTarget
+        }
+        logger.lifecycle("Test report copied to ${reportTarget}")
+    }
 }
