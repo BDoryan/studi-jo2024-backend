@@ -14,6 +14,13 @@
   tests : [https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html](https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html)
 - Manuel d'utilisation : [docs/manuel-d-utillisation.pdf](docs/manuel-d-utillisation.pdf)
 
+## Déploiement Docker
+Le projet complet (backend, frontend, base de données) est conteneurisé avec Docker.
+Le dépôt Docker est disponible ici : https://github.com/BDoryan/studi-jo2024-docker
+
+### Schema architecture
+<img src="https://github.com/BDoryan/studi-jo2024-docker/blob/main/schema.png?raw=true">
+
 ## À propos
 
 Ce dépôt héberge le **backend Spring Boot 3 / Java 21** du projet JO 2024 développé dans le cadre de l'ECF Studi.  
