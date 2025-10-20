@@ -36,14 +36,7 @@ Schéma global :
 
 ## Modèle de données (MCD / classes principales)
 
-| Entité        | Rôle                                         | Champs clés                                                           | Relations                                        |
-| ------------- | -------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------ |
-| `Customer`    | Client du site.                              | `id`, `firstName`, `lastName`, `email`, `password`, `secretKey`       | 1 -* `Transaction`, accès indirect aux tickets.  |
-| `Admin`       | Utilisateur du backoffice (ADMIN / SCANNER). | `id`, `email`, `password`, `fullName`, `role`                         | Authentification indépendante.                   |
-| `Offer`       | Offre commerciale (pack de billets).         | `id`, `name`, `description`, `price`, `persons`, `quantity`, `active` | Référencée dans `Transaction`.                   |
-| `Transaction` | Achat Stripe.                                | `id`, `stripeSessionId`, `offerName`, `amount`, `status`, `createdAt` | Liée à un `Customer`, génère plusieurs `Ticket`. |
-| `Ticket`      | Billet émis après paiement.                  | `id`, `secretKey`, `entriesAllowed`, `status`, `createdAt`            | Lié à une `Transaction`.                         |
-
+<img src="https://github.com/BDoryan/studi-jo2024-backend/blob/master/docs/mcd.png?raw=true" alt="MCD JO 2024" width="600"/>
 ### Points clés :
 
 * Les billets sont créés **uniquement après la confirmation Stripe** (`checkout.session.completed`).
@@ -55,7 +48,7 @@ Schéma global :
 
 ## Endpoints principaux (Swagger)
 
-La documentation complète est disponible sur `/swagger-ui/index.html`.
+La documentation complète est disponible sur [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
 
 ### Authentification client
 
