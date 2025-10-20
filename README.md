@@ -68,7 +68,7 @@ La documentation complète est disponible sur [https://jo2024-api.doryanbessiere
 * Application publique : [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
 * Administration : [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
 * API (Swagger) : [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
-* Rapport de tests : [https://bdoryan.github.io/studi-jo2024-backend/report/index.html](https://bdoryan.github.io/studi-jo2024-backend/report/index.html)
+* Rapport de tests : [https://bdoryan.github.io/studi-jo2024-backend/report/index.html](https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html)
 
 ---
 
