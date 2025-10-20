@@ -13,7 +13,7 @@ import studi.doryanbessiere.jo2024.services.payments.Transaction;
 import studi.doryanbessiere.jo2024.services.payments.TransactionRepository;
 import studi.doryanbessiere.jo2024.services.tickets.dto.TicketResponse;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,7 +73,7 @@ class TicketServiceTest {
                 .entriesAllowed(2)
                 .status(Ticket.Status.ACTIVE)
                 .transaction(transaction)
-                .createdAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
                 .build();
 
         when(transactionRepository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
@@ -104,7 +104,7 @@ class TicketServiceTest {
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> {
             Ticket ticket = invocation.getArgument(0);
             ticket.setId(55L);
-            ticket.setCreatedAt(LocalDateTime.now());
+            ticket.setCreatedAt(OffsetDateTime.now());
             return ticket;
         });
 
@@ -153,7 +153,7 @@ class TicketServiceTest {
                 .entriesAllowed(2)
                 .status(Ticket.Status.ACTIVE)
                 .transaction(paidTransaction)
-                .createdAt(LocalDateTime.of(2024, 2, 10, 14, 0))
+                .createdAt(OffsetDateTime.of(java.time.LocalDateTime.of(2024, 2, 10, 14, 0), java.time.ZoneOffset.UTC))
                 .build();
 
         when(ticketRepository.findAllByCustomerSecretOrderByCreatedAtDesc(customer.getSecretKey()))
