@@ -1,79 +1,67 @@
 # STUDI | JO 2024 – Plateforme de billetterie
 
-> Application Spring Boot pour la vente, le paiement et la validation de billets des Jeux Olympiques 2024.
+> Backend Spring Boot pour la réservation, le paiement et le contrôle de billets des Jeux Olympiques 2024.
 
-* Application publique : [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
-* Interface administrateur : [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
-* Documentation API : [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
+## Accès rapides
 
----
+- Site public : [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
+- Interface
+  administrateur : [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
+- Documentation
+  API : [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
+- Documentation technique : [docs/documentation-technique.md](docs/documentation-technical.md)
+- Rapport de
+  tests : [https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html](https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html)
 
-## Présentation du projet
+## À propos
 
-Le projet **JO 2024** est une plateforme complète de billetterie permettant d’acheter des offres, d’effectuer un paiement sécurisé via Stripe, puis de générer et valider les billets à l’entrée.
-Il a été développé dans le cadre de l’ECF Studi et se compose :
+Ce dépôt héberge le **backend Spring Boot 3 / Java 21** du projet JO 2024 développé dans le cadre de l’ECF Studi.  
+Il fournit une API REST sécurisée consommée par un site public, un back-office et une application de contrôle des
+billets.
 
-* d’un **backend Spring Boot 3 / Java 21** (ce dépôt) ;
-* d’un **frontend public** et d’un **backoffice administrateur** séparés ;
-* d’intégrations externes comme **Stripe** pour les paiements et **SMTP** pour l’envoi d’e-mails.
+### Fonctionnalités principales
 
----
+- Consultation des offres de billetterie (solo, duo, famille…)
+- Authentification client (création de compte, connexion, réinitialisation de mot de passe)
+- Gestion des administrateurs et rôles d’inspection
+- Intégration Stripe Checkout et génération de e-billets (QR code)
+- Validation des billets le jour de l’événement
 
-## Architecture du projet
+## Démarrage rapide
 
-L’application suit une architecture claire, organisée par domaines métiers.
+1. **Prérequis** : JDK 21, MySQL 8+, variables d’environnement Stripe/SMTP/JWT.
+2. **Configuration** : dupliquez `application.properties` ou surchargez-le via des variables (`spring.datasource.*`,
+   `app.jwt.*`, `stripe.*`…).
+3. **Lancer l’API en local** :
 
-Schéma global :
-[https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA](https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA)
+   ```bash
+   ./gradlew bootRun
+   ```
 
-* Les **contrôleurs REST** exposent les routes de l’API.
-* Les **services** contiennent la logique principale (authentification, paiement, génération de billets, etc.).
-* Les **repositories JPA** gèrent l’accès à la base de données.
-* Les **aspects AOP** (`@AdminOnly`, `@CustomerOnly`) assurent les contrôles d’accès.
-* La **configuration** regroupe la sécurité, CORS, Stripe et l’initialisation des comptes par défaut.
+4. **Construire l’artefact** :
 
----
+   ```bash
+   ./gradlew build
+   ```
 
-## Modèle de données (MCD)
+## Tests
 
-<img src="https://github.com/BDoryan/studi-jo2024-backend/blob/master/docs/imgs/mcd.png?raw=true" alt="MCD JO 2024" width="600"/>
-
-### Points clés :
-
-* Les billets sont créés **uniquement après la confirmation Stripe** (`checkout.session.completed`).
-* Le lien entre un ticket et un client passe par un **identifiant interne non sensible** (`customerSecret`).
-* Chaque transaction garde une copie des infos de l’offre (nom, prix) même si celle-ci change plus tard.
-* Les validations de mot de passe et d’e-mail sont gérées via des annotations personnalisées.
-
----
-
-## Endpoints principaux (Swagger)
-
-La documentation complète est disponible sur [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
-
-## Sécurité
-
-* **JWT stateless** : génération et vérification de tokens signés (HMAC-SHA) via `JwtService`.
-* **Spring Security 6** : configuration `SecurityConfig`, sessions désactivées, Bcrypt pour les mots de passe.
-* **Contrôles d’accès** : annotations `@AdminOnly` et `@CustomerOnly` vérifiant le rôle dans le JWT.
-* **Gestion d’erreurs unifiée** : `GlobalExceptionHandler` pour des réponses JSON cohérentes.
-* **Validation des données** : contraintes standard (force du mot de passe, e-mail unique, etc.).
-* **Webhooks Stripe** : signature vérifiée via la clé secrète et gestion des doublons.
-* **CORS** : origine autorisée configurable (`CORS_ALLOWED_ORIGIN`), compatible avec les headers personnalisés.
-
----
-
-### Accès rapides
-
-* Application publique : [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
-* Administration : [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
-* API (Swagger) : [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
-* Rapport de tests : [https://bdoryan.github.io/studi-jo2024-backend/report/index.html](https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html)
-
----
-
-### Commande utile (Webhook Stripe)
-
+```bash
+./gradlew test
 ```
-stripe listen --forward-to localhost:8080/stripe/webhook
-```
+
+Le rapport HTML est copié dans `docs/report/test` après exécution.
+
+## Ressources complémentaires
+
+- Documentation technique détaillée (architecture, sécurité, flux
+  métier) : [docs/documentation-technique.md](docs/documentation-technical.md)
+- Commande Stripe CLI pour écouter les webhooks :
+
+  ```bash
+  stripe listen --forward-to localhost:8080/stripe/webhook
+  ```
+
+---
+
+Projet maintenu par Doryan Bessière & José - ESN InfoEvent (Studi). 

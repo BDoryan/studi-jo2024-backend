@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Value;
 import studi.doryanbessiere.jo2024.services.tickets.Ticket;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Value
 @Builder
@@ -27,7 +27,7 @@ public class TicketScanResponse {
     double amount;
 
     @Schema(description = "Date de création du ticket")
-    LocalDateTime createdAt;
+    OffsetDateTime createdAt;
 
     @Schema(description = "Informations du client associé au ticket")
     CustomerInfo customer;

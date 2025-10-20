@@ -22,7 +22,7 @@ public class DataInitializer implements CommandLineRunner {
         String adminPassword = env.getProperty("ADMIN_DEFAULT_PASSWORD");
 
         if (adminPassword == null || adminPassword.isBlank()) {
-            System.err.println("Aucun mot de passe défini pour ADMIN_DEFAULT_PASSWORD — administrateur non créé.");
+            System.err.println("Aucun mot de passe défini pour ADMIN_DEFAULT_PASSWORD - administrateur non créé.");
             return;
         }
 

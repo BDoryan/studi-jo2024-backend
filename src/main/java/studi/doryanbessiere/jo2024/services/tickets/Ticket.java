@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import studi.doryanbessiere.jo2024.services.payments.Transaction;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "tickets")
@@ -38,7 +39,7 @@ public class Ticket {
     private Status status;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     public enum Status {
         ACTIVE,
@@ -48,7 +49,7 @@ public class Ticket {
     @PrePersist
     void prePersist() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = OffsetDateTime.now(ZoneId.of("Europe/Paris"));
         }
         if (status == null) {
             status = Status.ACTIVE;
