@@ -94,7 +94,7 @@ Points clés :
    unique).
 3. Le client consulte ensuite ses billets actifs via `GET /auth/customer/me/tickets`.
 
-### 4.4. Contrôle le jour J
+### 4.4. Contrôle des billets
 
 1. L'agent scanne un QR code → `POST /tickets/scan` renvoie les informations du billet et du client associé.
 2. Après vérification, `POST /tickets/validate` change le statut du ticket en `USED` pour empêcher toute réutilisation.
