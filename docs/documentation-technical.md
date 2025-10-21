@@ -32,7 +32,11 @@ Organisation par domaines dans `src/main/java/studi/doryanbessiere/jo2024` :
 Les contrôleurs REST exposent les endpoints publics, les services encapsulent la logique métier et les repositories
 Spring Data JPA persistents utilisent une base MySQL (configurable).
 
-Schema architecture : [https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA](https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA)
+### Schema architecture
+<img src="https://github.com/BDoryan/studi-jo2024-docker/blob/main/schema.png?raw=true">
+
+
+Schema architecture (bloc 1) : [https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA](https://excalidraw.com/#json=kW1RE2LWFbD9jQYJmal7C,Iiudqv7kNZxKyqhmhEGPwA)
 
 ## 3. Modèle de données
 
@@ -45,7 +49,7 @@ Principales entités JPA :
 - `Ticket` : billet généré après paiement validé (secret unique pour QR code, statut `ACTIVE/USED`, nombre d'entrées,
   lien transaction/client).
 
-![Modèle conceptuel de données](imgs/mcd.png)
+![Modèle conceptuel de données](imgs/mcd-2fa.png)
 
 Points clés :
 
