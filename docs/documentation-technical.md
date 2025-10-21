@@ -121,7 +121,7 @@ Points clés :
 | Tickets     | `POST /tickets/scan`                                      | Lecture d'un billet      | `@AdminOnly`     |
 |             | `POST /tickets/validate`                                  | Consommation du billet   | `@AdminOnly`     |
 
-Les schémas de requêtes/réponses détaillés sont disponibles via Swagger (`/swagger-ui.html`).
+Les schémas de requêtes/réponses détaillés sont disponibles via Swagger [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
 
 ## 6. Sécurité et conformité
 
