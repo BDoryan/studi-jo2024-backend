@@ -32,6 +32,10 @@ Organisation par domaines dans `src/main/java/studi/doryanbessiere/jo2024` :
 Les contrôleurs REST exposent les endpoints publics, les services encapsulent la logique métier et les repositories
 Spring Data JPA persistents utilisent une base MySQL (configurable).
 
+## Déploiement Docker
+
+https://github.com/BDoryan/studi-jo2024-docker
+
 ### Schema architecture
 <img src="https://github.com/BDoryan/studi-jo2024-docker/blob/main/schema.png?raw=true">
 
