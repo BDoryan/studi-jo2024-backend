@@ -1,49 +1,47 @@
-# STUDI | JO 2024 – Plateforme de billetterie
+# STUDI | JO 2024 – Ticketing Platform
 
-> Backend Spring Boot pour la réservation, le paiement et le contrôle de billets des Jeux Olympiques 2024.
+> Spring Boot backend for booking, payment, and ticket control for the 2024 Olympic Games.
 
-## Accès rapides
+## Quick Access
 
-- Site public : [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
-- Interface
-  administrateur : [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
-- Documentation
-  API : [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
-- Documentation technique : [docs/documentation-technique.md](docs/documentation-technical.md)
-- Rapport de
-  tests : [https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html](https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html)
-- Manuel d'utilisation : [docs/manuel-d-utillisation.pdf](docs/manuel-d-utillisation.pdf)
+* Public website: [https://jo2024.doryanbessiere.fr/](https://jo2024.doryanbessiere.fr/)
+* Admin interface: [http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo](http://jo2024.doryanbessiere.fr/admin/vG3EGPqaJo)
+* API documentation: [https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html](https://jo2024-api.doryanbessiere.fr/swagger-ui/index.html)
+* Technical documentation: docs/documentation-technical.md
+* Test report: [https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html](https://bdoryan.github.io/studi-jo2024-backend/report/test/index.html)
+* User manual: docs/manuel-d-utillisation.pdf
 
-## Déploiement Docker
-Le projet complet (backend, frontend, base de données) est conteneurisé avec Docker.
-Le dépôt Docker est disponible ici : https://github.com/BDoryan/studi-jo2024-docker
+## Docker Deployment
 
-## À propos
+The full project (backend, frontend, database) is containerized with Docker.
+The Docker repository is available here: [https://github.com/BDoryan/studi-jo2024-docker](https://github.com/BDoryan/studi-jo2024-docker)
 
-Ce dépôt héberge le **backend Spring Boot 3 / Java 21** du projet JO 2024 développé dans le cadre de l'ECF Studi.  
-Il fournit une API REST sécurisée consommée par un site public, un back-office et une application de contrôle des
-billets.
+## About
 
-### Fonctionnalités principales
+This repository hosts the **Spring Boot 3 / Java 21 backend** of the JO 2024 project developed as part of the Studi ECF.
+It provides a secure REST API consumed by a public website, an admin back-office, and a ticket control application.
 
-- Consultation des offres de billetterie (solo, duo, famille…)
-- Authentification client (création de compte, connexion, réinitialisation de mot de passe)
-- Gestion des administrateurs et rôles d'inspection
-- Intégration Stripe Checkout et génération de e-billets (QR code)
-- Validation des billets le jour de l'événement
+### Main Features
 
-## Démarrage rapide
+* Browse ticketing offers (solo, duo, family…)
+* Customer authentication (account creation, login, password reset)
+* Admin management and inspection roles
+* Stripe Checkout integration and e-ticket generation (QR code)
+* Ticket validation on the day of the event
 
-1. **Prérequis** : JDK 21, MySQL 8+, variables d'environnement Stripe/SMTP/JWT.
-2. **Configuration** : dupliquez `application.properties` ou surchargez-le via des variables (`spring.datasource.*`,
-   `app.jwt.*`, `stripe.*`…).
-3. **Lancer l'API en local** :
+## Quick Start
+
+1. **Prerequisites**: JDK 21, MySQL 8+, Stripe/SMTP/JWT environment variables
+
+2. **Configuration**: duplicate `application.properties` or override it via environment variables (`spring.datasource.*`, `app.jwt.*`, `stripe.*`, etc.)
+
+3. **Run the API locally**:
 
    ```bash
    ./gradlew bootRun
    ```
 
-4. **Construire l'artefact** :
+4. **Build the artifact**:
 
    ```bash
    ./gradlew build
@@ -55,18 +53,13 @@ billets.
 ./gradlew test
 ```
 
-Le rapport HTML est copié dans `docs/report/test` après exécution.
+The HTML report is generated in `docs/report/test` after execution.
 
-## Ressources complémentaires
+## Additional Resources
 
-- Documentation technique détaillée (architecture, sécurité, flux
-  métier) : [docs/documentation-technique.md](docs/documentation-technical.md)
-- Commande Stripe CLI pour écouter les webhooks :
+* Detailed technical documentation (architecture, security, business flows): docs/documentation-technical.md
+* Stripe CLI command to listen to webhooks:
 
   ```bash
   stripe listen --forward-to localhost:8080/stripe/webhook
   ```
-
----
-
-Projet maintenu par Doryan Bessière & José - ESN InfoEvent (Studi). 
